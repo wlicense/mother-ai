@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>マザーAI - デザインテーマ選択</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+    }
+
+    .container {
+      max-width: 1400px;
+      width: 100%;
+    }
+
+    h1 {
+      text-align: center;
+      color: white;
+      font-size: 2.5rem;
+      margin-bottom: 1rem;
+    }
+
+    .subtitle {
+      text-align: center;
+      color: rgba(255, 255, 255, 0.9);
+      font-size: 1.1rem;
+      margin-bottom: 3rem;
+    }
+
+    .themes-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 2rem;
+      margin-bottom: 2rem;
+    }
+
+    .theme-card {
+      background: white;
+      border-radius: 16px;
+      padding: 2rem;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+      cursor: pointer;
+      position: relative;
+    }
+
+    .theme-card:hover {
+      transform: translateY(-8px);
+      box-shadow: 0 15px 40px rgba(0, 0, 0, 0.3);
+    }
+
+    .theme-card.selected {
+      border: 3px solid #4CAF50;
+      transform: scale(1.05);
+    }
+
+    .theme-name {
+      font-size: 1.5rem;
+      font-weight: 700;
+      margin-bottom: 1rem;
+      text-align: center;
+    }
+
+    .theme-description {
+      font-size: 0.95rem;
+      color: #666;
+      margin-bottom: 1.5rem;
+      text-align: center;
+      line-height: 1.6;
+    }
+
+    .color-palette {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .color-item {
+      text-align: center;
+    }
+
+    .color-box {
+      width: 100%;
+      height: 80px;
+      border-radius: 8px;
+      margin-bottom: 0.5rem;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .color-label {
+      font-size: 0.85rem;
+      color: #666;
+      font-weight: 600;
+    }
+
+    .color-value {
+      font-size: 0.75rem;
+      color: #999;
+      font-family: 'Courier New', monospace;
+    }
+
+    .preview-section {
+      margin-top: 1.5rem;
+      padding-top: 1.5rem;
+      border-top: 2px solid #f0f0f0;
+    }
+
+    .preview-label {
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: #333;
+      margin-bottom: 0.75rem;
+    }
+
+    .preview-ui {
+      display: flex;
+      gap: 0.5rem;
+      margin-bottom: 1rem;
+    }
+
+    .preview-button {
+      padding: 8px 16px;
+      border-radius: 6px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      border: none;
+      cursor: pointer;
+    }
+
+    .select-button {
+      width: 100%;
+      padding: 12px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 1rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: opacity 0.3s ease;
+      margin-top: 1rem;
+    }
+
+    .select-button:hover {
+      opacity: 0.9;
+    }
+
+    .selected-badge {
+      position: absolute;
+      top: 1rem;
+      right: 1rem;
+      background: #4CAF50;
+      color: white;
+      padding: 6px 12px;
+      border-radius: 20px;
+      font-size: 0.8rem;
+      font-weight: 700;
+      display: none;
+    }
+
+    .theme-card.selected .selected-badge {
+      display: block;
+    }
+
+    .confirm-section {
+      text-align: center;
+      padding: 2rem;
+      background: white;
+      border-radius: 16px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+    }
+
+    .confirm-button {
+      padding: 16px 48px;
+      background: #4CAF50;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 1.2rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background 0.3s ease;
+    }
+
+    .confirm-button:hover {
+      background: #45a049;
+    }
+
+    .confirm-button:disabled {
+      background: #ccc;
+      cursor: not-allowed;
+    }
+
+    #selectedInfo {
+      font-size: 1.1rem;
+      color: #666;
+      margin-bottom: 1.5rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🎨 マザーAI デザインテーマ選択</h1>
+    <p class="subtitle">プロジェクトの印象を決める4つのデザインテーマからお選びください</p>
+
+    <div class="themes-grid">
+      <!-- テーマ1: プロフェッショナルブルー -->
+      <div class="theme-card" data-theme="1">
+        <div class="selected-badge">✓ 選択中</div>
+        <h2 class="theme-name" style="color: #1976d2;">テーマ1: プロフェッショナルブルー</h2>
+        <p class="theme-description">信頼感と安定感を与える、ビジネスシーンに最適なクラシックブルー。エンタープライズ向けの堅実な印象を演出します。</p>
+
+        <div class="color-palette">
+          <div class="color-item">
+            <div class="color-box" style="background: #1976d2;"></div>
+            <div class="color-label">Primary</div>
+            <div class="color-value">#1976d2</div>
+          </div>
+          <div class="color-item">
+            <div class="color-box" style="background: #9c27b0;"></div>
+            <div class="color-label">Secondary</div>
+            <div class="color-value">#9c27b0</div>
+          </div>
+          <div class="color-item">
+            <div class="color-box" style="background: #f5f5f5;"></div>
+            <div class="color-label">Background</div>
+            <div class="color-value">#f5f5f5</div>
+          </div>
+          <div class="color-item">
+            <div class="color-box" style="background: #ffffff; border: 1px solid #ddd;"></div>
+            <div class="color-label">Paper</div>
+            <div class="color-value">#ffffff</div>
+          </div>
+        </div>
+
+        <div class="preview-section">
+          <div class="preview-label">UIプレビュー:</div>
+          <div class="preview-ui">
+            <button class="preview-button" style="background: #1976d2; color: white;">プライマリ</button>
+            <button class="preview-button" style="background: #9c27b0; color: white;">セカンダリ</button>
+            <button class="preview-button" style="background: white; color: #1976d2; border: 2px solid #1976d2;">アウトライン</button>
+          </div>
+        </div>
+
+        <button class="select-button" onclick="selectTheme(1)">このテーマを選択</button>
+      </div>
+
+      <!-- テーマ2: クリエイティブパープル -->
+      <div class="theme-card" data-theme="2">
+        <div class="selected-badge">✓ 選択中</div>
+        <h2 class="theme-name" style="color: #7b2cbf;">テーマ2: クリエイティブパープル</h2>
+        <p class="theme-description">革新性と創造性を表現する鮮やかなパープル。AI×デザインの先進的なイメージを強調します。</p>
+
+        <div class="color-palette">
+          <div class="color-item">
+            <div class="color-box" style="background: #7b2cbf;"></div>
+            <div class="color-label">Primary</div>
+            <div class="color-value">#7b2cbf</div>
+          </div>
+          <div class="color-item">
+            <div class="color-box" style="background: #e91e63;"></div>
+            <div class="color-label">Secondary</div>
+            <div class="color-value">#e91e63</div>
+          </div>
+          <div class="color-item">
+            <div class="color-box" style="background: #fafafa;"></div>
+            <div class="color-label">Background</div>
+            <div class="color-value">#fafafa</div>
+          </div>
+          <div class="color-item">
+            <div class="color-box" style="background: #ffffff; border: 1px solid #ddd;"></div>
+            <div class="color-label">Paper</div>
+            <div class="color-value">#ffffff</div>
+          </div>
+        </div>
+
+        <div class="preview-section">
+          <div class="preview-label">UIプレビュー:</div>
+          <div class="preview-ui">
+            <button class="preview-button" style="background: #7b2cbf; color: white;">プライマリ</button>
+            <button class="preview-button" style="background: #e91e63; color: white;">セカンダリ</button>
+            <button class="preview-button" style="background: white; color: #7b2cbf; border: 2px solid #7b2cbf;">アウトライン</button>
+          </div>
+        </div>
+
+        <button class="select-button" onclick="selectTheme(2)">このテーマを選択</button>
+      </div>
+
+      <!-- テーマ3: フレッシュグリーン -->
+      <div class="theme-card" data-theme="3">
+        <div class="selected-badge">✓ 選択中</div>
+        <h2 class="theme-name" style="color: #2e7d32;">テーマ3: フレッシュグリーン</h2>
+        <p class="theme-description">成長と活力を象徴する爽やかなグリーン。環境配慮型プロダクトや成長企業に最適です。</p>
+
+        <div class="color-palette">
+          <div class="color-item">
+            <div class="color-box" style="background: #2e7d32;"></div>
+            <div class="color-label">Primary</div>
+            <div class="color-value">#2e7d32</div>
+          </div>
+          <div class="color-item">
+            <div class="color-box" style="background: #00acc1;"></div>
+            <div class="color-label">Secondary</div>
+            <div class="color-value">#00acc1</div>
+          </div>
+          <div class="color-item">
+            <div class="color-box" style="background: #f1f8f4;"></div>
+            <div class="color-label">Background</div>
+            <div class="color-value">#f1f8f4</div>
+          </div>
+          <div class="color-item">
+            <div class="color-box" style="background: #ffffff; border: 1px solid #ddd;"></div>
+            <div class="color-label">Paper</div>
+            <div class="color-value">#ffffff</div>
+          </div>
+        </div>
+
+        <div class="preview-section">
+          <div class="preview-label">UIプレビュー:</div>
+          <div class="preview-ui">
+            <button class="preview-button" style="background: #2e7d32; color: white;">プライマリ</button>
+            <button class="preview-button" style="background: #00acc1; color: white;">セカンダリ</button>
+            <button class="preview-button" style="background: white; color: #2e7d32; border: 2px solid #2e7d32;">アウトライン</button>
+          </div>
+        </div>
+
+        <button class="select-button" onclick="selectTheme(3)">このテーマを選択</button>
+      </div>
+
+      <!-- テーマ4: エレガントダーク -->
+      <div class="theme-card" data-theme="4">
+        <div class="selected-badge">✓ 選択中</div>
+        <h2 class="theme-name" style="color: #212121;">テーマ4: エレガントダーク</h2>
+        <p class="theme-description">高級感と洗練を追求したダークモード。モダンなデザイナーやクリエイター向けのシックな雰囲気。</p>
+
+        <div class="color-palette">
+          <div class="color-item">
+            <div class="color-box" style="background: #212121;"></div>
+            <div class="color-label">Primary</div>
+            <div class="color-value">#212121</div>
+          </div>
+          <div class="color-item">
+            <div class="color-box" style="background: #ff6f00;"></div>
+            <div class="color-label">Secondary</div>
+            <div class="color-value">#ff6f00</div>
+          </div>
+          <div class="color-item">
+            <div class="color-box" style="background: #1a1a1a;"></div>
+            <div class="color-label">Background</div>
+            <div class="color-value">#1a1a1a</div>
+          </div>
+          <div class="color-item">
+            <div class="color-box" style="background: #2d2d2d;"></div>
+            <div class="color-label">Paper</div>
+            <div class="color-value">#2d2d2d</div>
+          </div>
+        </div>
+
+        <div class="preview-section">
+          <div class="preview-label">UIプレビュー:</div>
+          <div class="preview-ui">
+            <button class="preview-button" style="background: #212121; color: white;">プライマリ</button>
+            <button class="preview-button" style="background: #ff6f00; color: white;">セカンダリ</button>
+            <button class="preview-button" style="background: white; color: #212121; border: 2px solid #212121;">アウトライン</button>
+          </div>
+        </div>
+
+        <button class="select-button" onclick="selectTheme(4)">このテーマを選択</button>
+      </div>
+    </div>
+
+    <div class="confirm-section">
+      <p id="selectedInfo">テーマを選択してください</p>
+      <button id="confirmButton" class="confirm-button" disabled onclick="confirmSelection()">
+        選択を確定する
+      </button>
+    </div>
+  </div>
+
+  <script>
+    let selectedTheme = null;
+
+    function selectTheme(themeNumber) {
+      // 既存の選択を解除
+      document.querySelectorAll('.theme-card').forEach(card => {
+        card.classList.remove('selected');
+      });
+
+      // 新しい選択を適用
+      const selectedCard = document.querySelector(`[data-theme="${themeNumber}"]`);
+      selectedCard.classList.add('selected');
+      selectedTheme = themeNumber;
+
+      // 選択情報を更新
+      const themeNames = {
+        1: 'プロフェッショナルブルー',
+        2: 'クリエイティブパープル',
+        3: 'フレッシュグリーン',
+        4: 'エレガントダーク'
+      };
+
+      document.getElementById('selectedInfo').textContent =
+        `選択中: テーマ${themeNumber} - ${themeNames[themeNumber]}`;
+      document.getElementById('confirmButton').disabled = false;
+    }
+
+    function confirmSelection() {
+      if (selectedTheme) {
+        alert(`テーマ${selectedTheme}を選択しました！\n\nこの番号をエージェントに伝えてください。`);
+        // ここで選択結果を保存する処理を追加可能
+        console.log('Selected Theme:', selectedTheme);
+      }
+    }
+
+    // ページロード時にスクロールをトップに
+    window.scrollTo(0, 0);
+  </script>
+</body>
+</html>

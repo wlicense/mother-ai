@@ -21,29 +21,14 @@ import ApplicationsPage from './pages/admin/ApplicationsPage'
 import UsersManagementPage from './pages/admin/UsersManagementPage'
 import ApiMonitorPage from './pages/admin/ApiMonitorPage'
 
-// Hooks
-import { useAuthStore } from './stores/authStore'
+// Auth
+import { ProtectedRoute } from './features/auth/components/ProtectedRoute'
+import { useAuth } from './features/auth/hooks/useAuth'
 
 function App() {
-  const { user, isAuthenticated } = useAuthStore()
+  const { user, isAuthenticated } = useAuth()
 
-  // Route protection helper
-  const ProtectedRoute = ({ children, requiredRole }: { children: React.ReactNode; requiredRole?: string }) => {
-    if (!isAuthenticated) {
-      return <Navigate to="/login" replace />
-    }
-
-    if (user?.status === 'pending') {
-      return <Navigate to="/pending" replace />
-    }
-
-    if (requiredRole && user?.role !== requiredRole) {
-      return <Navigate to="/projects" replace />
-    }
-
-    return <>{children}</>
-  }
-
+  // ゲストルート保護（認証済みユーザーをリダイレクト）
   const GuestRoute = ({ children }: { children: React.ReactNode }) => {
     if (isAuthenticated && user?.status === 'pending') {
       return <Navigate to="/pending" replace />
