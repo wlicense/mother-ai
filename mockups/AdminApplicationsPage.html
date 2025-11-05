@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>申請審査ダッシュボード - マザーAI Admin</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Roboto', sans-serif; background-color: #f5f5f5; }
+    .header { background-color: #d32f2f; color: white; height: 64px; display: flex; align-items: center; padding: 0 24px; }
+    .header-logo { font-size: 24px; font-weight: 700; }
+    .sidebar { position: fixed; left: 0; top: 64px; bottom: 0; width: 240px; background: white; border-right: 1px solid #e0e0e0; padding: 24px 0; }
+    .sidebar-item { padding: 12px 24px; cursor: pointer; }
+    .sidebar-item.active { background-color: #ffebee; color: #d32f2f; font-weight: 600; border-left: 4px solid #d32f2f; }
+    .main-content { margin-left: 240px; margin-top: 64px; padding: 32px; }
+    .page-title { font-size: 32px; font-weight: 700; margin-bottom: 8px; }
+    .stats { display: flex; gap: 16px; margin-bottom: 32px; }
+    .stat-card { flex: 1; background: white; border-radius: 12px; padding: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+    .stat-label { font-size: 14px; color: #666; margin-bottom: 8px; }
+    .stat-value { font-size: 32px; font-weight: 700; color: #1976d2; }
+    .table-card { background: white; border-radius: 12px; padding: 24px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+    table { width: 100%; border-collapse: collapse; }
+    th, td { padding: 12px; text-align: left; border-bottom: 1px solid #e0e0e0; }
+    th { font-weight: 600; background-color: #f5f5f5; }
+    .btn-approve { background-color: #4caf50; color: white; padding: 6px 12px; border: none; border-radius: 4px; cursor: pointer; font-size: 12px; }
+    .btn-reject { background-color: #f44336; color: white; padding: 6px 12px; border: none; border-radius: 4px; cursor: pointer; font-size: 12px; }
+    .actions { display: flex; gap: 8px; }
+    @media (max-width: 768px) { .sidebar { display: none; } .main-content { margin-left: 0; } .stats { flex-direction: column; } }
+  </style>
+</head>
+<body>
+  <div class="header"><div class="header-logo">マザーAI Admin</div></div>
+  <div class="sidebar">
+    <div class="sidebar-item active">申請審査</div>
+    <div class="sidebar-item">ユーザー管理</div>
+    <div class="sidebar-item">API監視</div>
+  </div>
+  <div class="main-content">
+    <h1 class="page-title">申請審査ダッシュボード</h1>
+
+    <div class="stats">
+      <div class="stat-card">
+        <div class="stat-label">審査待ち</div>
+        <div class="stat-value">12</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">今月承認</div>
+        <div class="stat-value">45</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">却下</div>
+        <div class="stat-value">8</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">承認率</div>
+        <div class="stat-value">84%</div>
+      </div>
+    </div>
+
+    <div class="table-card">
+      <table>
+        <thead>
+          <tr>
+            <th>申請日</th>
+            <th>氏名</th>
+            <th>メール</th>
+            <th>経験レベル</th>
+            <th>利用目的</th>
+            <th>操作</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>2025-11-05</td>
+            <td>鈴木 花子</td>
+            <td>suzuki@example.com</td>
+            <td>完全初心者</td>
+            <td>副業としてWeb制作を始めたい</td>
+            <td>
+              <div class="actions">
+                <button class="btn-approve">承認</button>
+                <button class="btn-reject">却下</button>
+              </div>
+            </td>
+          </tr>
+          <tr>
+            <td>2025-11-04</td>
+            <td>田中 一郎</td>
+            <td>tanaka@example.com</td>
+            <td>基礎的な経験あり</td>
+            <td>クライアントワーク拡大のため</td>
+            <td>
+              <div class="actions">
+                <button class="btn-approve">承認</button>
+                <button class="btn-reject">却下</button>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</body>
+</html>

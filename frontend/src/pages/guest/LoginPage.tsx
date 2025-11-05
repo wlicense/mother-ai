@@ -71,8 +71,19 @@ export default function LoginPage() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
-              sx={{ mb: 3 }}
+              sx={{ mb: 1 }}
             />
+            <Box sx={{ textAlign: 'right', mb: 3 }}>
+              <Link
+                component="button"
+                type="button"
+                variant="body2"
+                onClick={() => navigate('/forgot-password')}
+                sx={{ cursor: 'pointer' }}
+              >
+                パスワードをお忘れですか？
+              </Link>
+            </Box>
             <Button type="submit" variant="contained" fullWidth size="large">
               ログイン
             </Button>

@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>審査待ち - マザーAI</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Roboto', 'Noto Sans JP', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      padding: 40px 20px;
+    }
+
+    .pending-container {
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+      width: 100%;
+      max-width: 700px;
+      margin: 0 auto;
+      padding: 40px;
+    }
+
+    .status-icon {
+      text-align: center;
+      margin-bottom: 24px;
+    }
+
+    .status-icon svg {
+      width: 80px;
+      height: 80px;
+      animation: spin 2s linear infinite;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    .header {
+      text-align: center;
+      margin-bottom: 32px;
+    }
+
+    .header h1 {
+      font-size: 28px;
+      color: #1976d2;
+      font-weight: 700;
+      margin-bottom: 12px;
+    }
+
+    .header p {
+      font-size: 16px;
+      color: #666;
+      line-height: 1.6;
+    }
+
+    .info-box {
+      background-color: #e3f2fd;
+      border-left: 4px solid #1976d2;
+      padding: 16px 20px;
+      margin-bottom: 32px;
+      border-radius: 8px;
+    }
+
+    .info-box h3 {
+      font-size: 16px;
+      font-weight: 600;
+      color: #1976d2;
+      margin-bottom: 8px;
+    }
+
+    .info-box p {
+      font-size: 14px;
+      color: #333;
+      line-height: 1.6;
+    }
+
+    .section {
+      margin-bottom: 32px;
+    }
+
+    .section-title {
+      font-size: 18px;
+      font-weight: 600;
+      color: #333;
+      margin-bottom: 16px;
+      padding-bottom: 8px;
+      border-bottom: 2px solid #1976d2;
+    }
+
+    .application-details {
+      background-color: #f5f5f5;
+      padding: 20px;
+      border-radius: 8px;
+    }
+
+    .detail-item {
+      margin-bottom: 16px;
+    }
+
+    .detail-item:last-child {
+      margin-bottom: 0;
+    }
+
+    .detail-label {
+      font-size: 12px;
+      font-weight: 600;
+      color: #666;
+      text-transform: uppercase;
+      margin-bottom: 4px;
+    }
+
+    .detail-value {
+      font-size: 16px;
+      color: #333;
+    }
+
+    .faq-list {
+      list-style: none;
+    }
+
+    .faq-item {
+      margin-bottom: 20px;
+      padding-bottom: 20px;
+      border-bottom: 1px solid #eee;
+    }
+
+    .faq-item:last-child {
+      border-bottom: none;
+      padding-bottom: 0;
+      margin-bottom: 0;
+    }
+
+    .faq-question {
+      font-size: 16px;
+      font-weight: 600;
+      color: #333;
+      margin-bottom: 8px;
+    }
+
+    .faq-answer {
+      font-size: 14px;
+      color: #666;
+      line-height: 1.6;
+    }
+
+    .contact-box {
+      background-color: #fff3e0;
+      border-left: 4px solid #ff9800;
+      padding: 16px 20px;
+      border-radius: 8px;
+      margin-top: 32px;
+    }
+
+    .contact-box h3 {
+      font-size: 16px;
+      font-weight: 600;
+      color: #ff9800;
+      margin-bottom: 8px;
+    }
+
+    .contact-box p {
+      font-size: 14px;
+      color: #333;
+      line-height: 1.6;
+    }
+
+    .contact-box a {
+      color: #1976d2;
+      text-decoration: none;
+      font-weight: 600;
+    }
+
+    .contact-box a:hover {
+      text-decoration: underline;
+    }
+
+    /* レスポンシブ対応 */
+    @media (max-width: 640px) {
+      .pending-container {
+        padding: 28px 20px;
+      }
+
+      .header h1 {
+        font-size: 24px;
+      }
+
+      .status-icon svg {
+        width: 60px;
+        height: 60px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="pending-container">
+    <div class="status-icon">
+      <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="12" cy="12" r="10" stroke="#1976d2" stroke-width="2"/>
+        <path d="M12 6v6l4 2" stroke="#1976d2" stroke-width="2" stroke-linecap="round"/>
+      </svg>
+    </div>
+
+    <div class="header">
+      <h1>申請を受け付けました</h1>
+      <p>現在、審査を進めております。しばらくお待ちください。</p>
+    </div>
+
+    <div class="info-box">
+      <h3>審査期間について</h3>
+      <p>通常、申請から <strong>1〜3営業日以内</strong> に審査結果をメールでお知らせします。<br>
+      承認されると、マザーAIの全機能をご利用いただけます。</p>
+    </div>
+
+    <!-- 申請内容の確認 -->
+    <div class="section">
+      <h2 class="section-title">申請内容</h2>
+      <div class="application-details">
+        <div class="detail-item">
+          <div class="detail-label">お名前</div>
+          <div class="detail-value">山田 太郎</div>
+        </div>
+
+        <div class="detail-item">
+          <div class="detail-label">メールアドレス</div>
+          <div class="detail-value">yamada@example.com</div>
+        </div>
+
+        <div class="detail-item">
+          <div class="detail-label">経験レベル</div>
+          <div class="detail-value">基礎的なプログラミング経験あり</div>
+        </div>
+
+        <div class="detail-item">
+          <div class="detail-label">利用目的</div>
+          <div class="detail-value">
+            Webアプリケーション開発案件の受注を目指しています。プログラミング経験は少ないですが、AIの力を借りて案件を完遂したいと考えています。
+          </div>
+        </div>
+
+        <div class="detail-item">
+          <div class="detail-label">申請日時</div>
+          <div class="detail-value">2025年11月5日 14:30</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- よくある質問 -->
+    <div class="section">
+      <h2 class="section-title">よくある質問</h2>
+      <ul class="faq-list">
+        <li class="faq-item">
+          <div class="faq-question">Q. 審査にはどのくらい時間がかかりますか？</div>
+          <div class="faq-answer">
+            A. 通常1〜3営業日以内に審査結果をメールでお知らせします。申請が集中している場合は、少しお時間をいただく場合があります。
+          </div>
+        </li>
+
+        <li class="faq-item">
+          <div class="faq-question">Q. 審査結果はどのように通知されますか？</div>
+          <div class="faq-answer">
+            A. 申請時に入力いただいたメールアドレス宛に、審査結果をお送りします。承認された場合は、ログイン方法も含めてご案内いたします。
+          </div>
+        </li>
+
+        <li class="faq-item">
+          <div class="faq-question">Q. 却下された場合、再申請は可能ですか？</div>
+          <div class="faq-answer">
+            A. はい、再申請が可能です。却下理由をメールでお知らせしますので、内容を改善の上、再度申請してください。
+          </div>
+        </li>
+
+        <li class="faq-item">
+          <div class="faq-question">Q. 申請内容を変更したい場合はどうすればよいですか？</div>
+          <div class="faq-answer">
+            A. 下記の問い合わせ先メールアドレスまでご連絡ください。変更内容を確認の上、対応させていただきます。
+          </div>
+        </li>
+      </ul>
+    </div>
+
+    <!-- 問い合わせ先 -->
+    <div class="contact-box">
+      <h3>お困りの際は</h3>
+      <p>
+        ご質問や問い合わせがございましたら、下記メールアドレスまでお気軽にご連絡ください。<br>
+        <a href="mailto:support@motherai.example.com">support@motherai.example.com</a>
+      </p>
+    </div>
+  </div>
+</body>
+</html>

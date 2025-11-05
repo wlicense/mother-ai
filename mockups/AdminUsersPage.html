@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ユーザー管理 - マザーAI Admin</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Roboto', sans-serif; background-color: #f5f5f5; }
+    .header { background-color: #d32f2f; color: white; height: 64px; display: flex; align-items: center; padding: 0 24px; }
+    .header-logo { font-size: 24px; font-weight: 700; }
+    .sidebar { position: fixed; left: 0; top: 64px; bottom: 0; width: 240px; background: white; border-right: 1px solid #e0e0e0; padding: 24px 0; }
+    .sidebar-item { padding: 12px 24px; cursor: pointer; }
+    .sidebar-item.active { background-color: #ffebee; color: #d32f2f; font-weight: 600; border-left: 4px solid #d32f2f; }
+    .main-content { margin-left: 240px; margin-top: 64px; padding: 32px; }
+    .page-title { font-size: 32px; font-weight: 700; margin-bottom: 32px; }
+    .table-card { background: white; border-radius: 12px; padding: 24px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+    table { width: 100%; border-collapse: collapse; }
+    th, td { padding: 12px; text-align: left; border-bottom: 1px solid #e0e0e0; }
+    th { font-weight: 600; background-color: #f5f5f5; }
+    .status-active { color: #4caf50; font-weight: 600; }
+    .status-suspended { color: #f44336; font-weight: 600; }
+    .btn-suspend { background-color: #ff9800; color: white; padding: 6px 12px; border: none; border-radius: 4px; cursor: pointer; font-size: 12px; }
+    @media (max-width: 768px) { .sidebar { display: none; } .main-content { margin-left: 0; } }
+  </style>
+</head>
+<body>
+  <div class="header"><div class="header-logo">マザーAI Admin</div></div>
+  <div class="sidebar">
+    <div class="sidebar-item">申請審査</div>
+    <div class="sidebar-item active">ユーザー管理</div>
+    <div class="sidebar-item">API監視</div>
+  </div>
+  <div class="main-content">
+    <h1 class="page-title">ユーザー管理</h1>
+    <div class="table-card">
+      <table>
+        <thead>
+          <tr>
+            <th>ユーザー名</th>
+            <th>メール</th>
+            <th>ステータス</th>
+            <th>プロジェクト数</th>
+            <th>API使用量</th>
+            <th>登録日</th>
+            <th>操作</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>山田 太郎</td>
+            <td>yamada@example.com</td>
+            <td><span class="status-active">アクティブ</span></td>
+            <td>3</td>
+            <td>1.2M トークン</td>
+            <td>2025-10-15</td>
+            <td><button class="btn-suspend">停止</button></td>
+          </tr>
+          <tr>
+            <td>佐藤 次郎</td>
+            <td>sato@example.com</td>
+            <td><span class="status-active">アクティブ</span></td>
+            <td>1</td>
+            <td>450K トークン</td>
+            <td>2025-10-20</td>
+            <td><button class="btn-suspend">停止</button></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</body>
+</html>

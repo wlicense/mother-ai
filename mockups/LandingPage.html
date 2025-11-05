@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>マザーAI - AI駆動開発プラットフォーム</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Roboto', 'Noto Sans JP', sans-serif; }
+    .header { position: fixed; top: 0; left: 0; right: 0; background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); height: 70px; display: flex; align-items: center; justify-content: space-between; padding: 0 40px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); z-index: 1000; }
+    .logo { font-size: 28px; font-weight: 700; color: #1976d2; }
+    .header-nav { display: flex; gap: 24px; align-items: center; }
+    .header-nav a { color: #333; text-decoration: none; font-weight: 500; }
+    .btn-login { background-color: transparent; border: 2px solid #1976d2; color: #1976d2; padding: 8px 20px; border-radius: 8px; font-weight: 600; cursor: pointer; }
+    .btn-apply { background-color: #1976d2; color: white; padding: 10px 24px; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; }
+
+    .hero { padding: 150px 40px 100px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; text-align: center; }
+    .hero-title { font-size: 56px; font-weight: 700; margin-bottom: 24px; }
+    .hero-subtitle { font-size: 24px; margin-bottom: 40px; opacity: 0.95; }
+    .hero-cta { display: flex; gap: 20px; justify-content: center; }
+    .btn-primary { background-color: white; color: #1976d2; padding: 16px 40px; border: none; border-radius: 8px; font-size: 18px; font-weight: 700; cursor: pointer; box-shadow: 0 4px 20px rgba(0,0,0,0.2); }
+    .btn-secondary { background-color: transparent; color: white; border: 2px solid white; padding: 16px 40px; border-radius: 8px; font-size: 18px; font-weight: 700; cursor: pointer; }
+
+    .features { padding: 80px 40px; background-color: #f5f5f5; }
+    .features-title { font-size: 40px; font-weight: 700; text-align: center; margin-bottom: 60px; }
+    .features-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 40px; max-width: 1200px; margin: 0 auto; }
+    .feature-card { background: white; border-radius: 16px; padding: 40px; box-shadow: 0 4px 16px rgba(0,0,0,0.1); text-align: center; }
+    .feature-icon { font-size: 48px; margin-bottom: 20px; }
+    .feature-title { font-size: 24px; font-weight: 600; margin-bottom: 16px; }
+    .feature-desc { font-size: 16px; color: #666; line-height: 1.6; }
+
+    .cta-section { padding: 80px 40px; background: linear-gradient(135deg, #1976d2 0%, #1565c0 100%); color: white; text-align: center; }
+    .cta-title { font-size: 40px; font-weight: 700; margin-bottom: 24px; }
+    .cta-desc { font-size: 20px; margin-bottom: 40px; opacity: 0.95; }
+
+    .footer { padding: 40px; background-color: #263238; color: white; text-align: center; }
+
+    @media (max-width: 768px) {
+      .hero-title { font-size: 36px; }
+      .features-grid { grid-template-columns: 1fr; }
+      .header-nav { display: none; }
+    }
+  </style>
+</head>
+<body>
+  <!-- ヘッダー -->
+  <div class="header">
+    <div class="logo">マザーAI</div>
+    <div class="header-nav">
+      <a href="#features">機能</a>
+      <button class="btn-login" onclick="location.href='/login'">ログイン</button>
+      <button class="btn-apply" onclick="location.href='/apply'">利用申請</button>
+    </div>
+  </div>
+
+  <!-- ヒーローセクション -->
+  <div class="hero">
+    <h1 class="hero-title">AI駆動で、<br>数百万円案件を完遂</h1>
+    <p class="hero-subtitle">プログラミング知識ゼロでも、AIエージェントとの対話だけで<br>フリーランス案件を納品レベルまで完成させる</p>
+    <div class="hero-cta">
+      <button class="btn-primary" onclick="location.href='/apply'">今すぐ始める</button>
+      <button class="btn-secondary">デモを見る</button>
+    </div>
+  </div>
+
+  <!-- 機能セクション -->
+  <div class="features" id="features">
+    <h2 class="features-title">マザーAIの特徴</h2>
+    <div class="features-grid">
+      <div class="feature-card">
+        <div class="feature-icon">🤖</div>
+        <h3 class="feature-title">Phase別専門エージェント</h3>
+        <p class="feature-desc">要件定義、コード生成、デプロイまで、各Phaseに特化したAIエージェントが対話をサポート</p>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-icon">⚡</div>
+        <h3 class="feature-title">対話だけで完結</h3>
+        <p class="feature-desc">コーディング不要。AIとの対話だけで、プロレベルのWebアプリを自動生成</p>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-icon">🚀</div>
+        <h3 class="feature-title">自動デプロイ</h3>
+        <p class="feature-desc">生成されたコードは自動でVercel/Cloud Runにデプロイ。すぐにクライアントに共有可能</p>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-icon">🔧</div>
+        <h3 class="feature-title">自己改善AI</h3>
+        <p class="feature-desc">マザーAI自身が自分のコードを解析し、機能改善・拡張を自動実装</p>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-icon">💰</div>
+        <h3 class="feature-title">100万円案件も完遂</h3>
+        <p class="feature-desc">非エンジニアでも大規模案件に挑戦し、納品レベルのクオリティを実現</p>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-icon">📊</div>
+        <h3 class="feature-title">コスト管理</h3>
+        <p class="feature-desc">API使用量をリアルタイム監視し、料金爆発を防止</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- CTAセクション -->
+  <div class="cta-section">
+    <h2 class="cta-title">今すぐ始めましょう</h2>
+    <p class="cta-desc">利用申請後、審査を経て承認されるとご利用いただけます</p>
+    <button class="btn-primary" onclick="location.href='/apply'">利用申請する</button>
+  </div>
+
+  <!-- フッター -->
+  <div class="footer">
+    <p>&copy; 2025 マザーAI. All rights reserved.</p>
+  </div>
+</body>
+</html>

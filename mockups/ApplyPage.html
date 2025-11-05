@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>利用申請 - マザーAI</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Roboto', 'Noto Sans JP', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      padding: 40px 20px;
+    }
+
+    .apply-container {
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+      width: 100%;
+      max-width: 600px;
+      margin: 0 auto;
+      padding: 40px;
+    }
+
+    .header {
+      text-align: center;
+      margin-bottom: 32px;
+    }
+
+    .header h1 {
+      font-size: 28px;
+      color: #1976d2;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+
+    .header p {
+      font-size: 14px;
+      color: #666;
+      line-height: 1.6;
+    }
+
+    .form-section {
+      margin-bottom: 32px;
+    }
+
+    .section-title {
+      font-size: 18px;
+      font-weight: 600;
+      color: #333;
+      margin-bottom: 16px;
+      padding-bottom: 8px;
+      border-bottom: 2px solid #1976d2;
+    }
+
+    .form-group {
+      margin-bottom: 20px;
+    }
+
+    .form-group label {
+      display: block;
+      font-size: 14px;
+      font-weight: 500;
+      color: #333;
+      margin-bottom: 8px;
+    }
+
+    .form-group label .required {
+      color: #d32f2f;
+      margin-left: 4px;
+    }
+
+    .form-group input,
+    .form-group textarea,
+    .form-group select {
+      width: 100%;
+      padding: 12px 16px;
+      font-size: 16px;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      transition: border-color 0.3s;
+      font-family: inherit;
+    }
+
+    .form-group input:focus,
+    .form-group textarea:focus,
+    .form-group select:focus {
+      outline: none;
+      border-color: #1976d2;
+    }
+
+    .form-group textarea {
+      min-height: 120px;
+      resize: vertical;
+    }
+
+    .form-group .helper-text {
+      font-size: 12px;
+      color: #666;
+      margin-top: 4px;
+    }
+
+    .password-requirements {
+      font-size: 12px;
+      color: #666;
+      margin-top: 8px;
+      padding-left: 16px;
+    }
+
+    .password-requirements li {
+      margin-bottom: 4px;
+    }
+
+    .oauth-section {
+      margin-top: 24px;
+      padding: 20px;
+      background-color: #f5f5f5;
+      border-radius: 8px;
+    }
+
+    .oauth-section h3 {
+      font-size: 14px;
+      font-weight: 600;
+      color: #333;
+      margin-bottom: 12px;
+    }
+
+    .oauth-section p {
+      font-size: 12px;
+      color: #666;
+      margin-bottom: 12px;
+    }
+
+    .oauth-buttons {
+      display: flex;
+      gap: 12px;
+    }
+
+    .btn {
+      padding: 12px 24px;
+      font-size: 16px;
+      font-weight: 600;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.3s;
+      text-align: center;
+    }
+
+    .btn-oauth {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 10px;
+      background-color: white;
+      border: 1px solid #ddd;
+      gap: 8px;
+      font-size: 14px;
+    }
+
+    .btn-oauth:hover {
+      background-color: #fafafa;
+      border-color: #bbb;
+    }
+
+    .oauth-icon {
+      width: 18px;
+      height: 18px;
+    }
+
+    .btn-primary {
+      width: 100%;
+      background-color: #1976d2;
+      color: white;
+      margin-top: 24px;
+      padding: 16px;
+    }
+
+    .btn-primary:hover {
+      background-color: #1565c0;
+      box-shadow: 0 4px 12px rgba(25, 118, 210, 0.3);
+    }
+
+    .btn-primary:disabled {
+      background-color: #ccc;
+      cursor: not-allowed;
+    }
+
+    .login-link {
+      text-align: center;
+      margin-top: 24px;
+      font-size: 14px;
+      color: #666;
+    }
+
+    .login-link a {
+      color: #1976d2;
+      text-decoration: none;
+      font-weight: 600;
+    }
+
+    .login-link a:hover {
+      text-decoration: underline;
+    }
+
+    /* レスポンシブ対応 */
+    @media (max-width: 640px) {
+      .apply-container {
+        padding: 28px 20px;
+      }
+
+      .header h1 {
+        font-size: 24px;
+      }
+
+      .oauth-buttons {
+        flex-direction: column;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="apply-container">
+    <div class="header">
+      <h1>マザーAI 利用申請</h1>
+      <p>申請後、審査を経て承認されるとご利用いただけます</p>
+    </div>
+
+    <form id="applyForm">
+      <!-- 基本情報 -->
+      <div class="form-section">
+        <h2 class="section-title">基本情報</h2>
+
+        <div class="form-group">
+          <label for="name">お名前<span class="required">*</span></label>
+          <input
+            type="text"
+            id="name"
+            name="name"
+            placeholder="山田 太郎"
+            required
+          >
+        </div>
+
+        <div class="form-group">
+          <label for="email">メールアドレス<span class="required">*</span></label>
+          <input
+            type="email"
+            id="email"
+            name="email"
+            placeholder="email@example.com"
+            required
+          >
+          <div class="helper-text">承認通知やログイン情報の送信に使用します</div>
+        </div>
+
+        <div class="form-group">
+          <label for="password">パスワード<span class="required">*</span></label>
+          <input
+            type="password"
+            id="password"
+            name="password"
+            placeholder="8文字以上のパスワード"
+            minlength="8"
+            required
+          >
+          <ul class="password-requirements">
+            <li>8文字以上</li>
+            <li>英字と数字を含む</li>
+          </ul>
+        </div>
+
+        <div class="form-group">
+          <label for="password_confirm">パスワード（確認）<span class="required">*</span></label>
+          <input
+            type="password"
+            id="password_confirm"
+            name="password_confirm"
+            placeholder="もう一度入力してください"
+            minlength="8"
+            required
+          >
+        </div>
+      </div>
+
+      <!-- 申請情報 -->
+      <div class="form-section">
+        <h2 class="section-title">申請情報</h2>
+
+        <div class="form-group">
+          <label for="purpose">利用目的<span class="required">*</span></label>
+          <textarea
+            id="purpose"
+            name="purpose"
+            placeholder="例: Webアプリケーション開発案件の受注を目指しています。プログラミング経験は少ないですが、AIの力を借りて案件を完遂したいと考えています。"
+            required
+          ></textarea>
+          <div class="helper-text">できるだけ具体的にご記入ください（200文字以上推奨）</div>
+        </div>
+
+        <div class="form-group">
+          <label for="experience_level">あなたの経験レベル<span class="required">*</span></label>
+          <select id="experience_level" name="experience_level" required>
+            <option value="">選択してください</option>
+            <option value="complete_beginner">完全初心者（プログラミング経験なし）</option>
+            <option value="html_css">HTML/CSS経験あり</option>
+            <option value="basic_programming">基礎的なプログラミング経験あり</option>
+            <option value="intermediate">実務経験あり（1-2年）</option>
+            <option value="advanced">実務経験豊富（3年以上）</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="referral_source">どこでマザーAIを知りましたか？</label>
+          <select id="referral_source" name="referral_source">
+            <option value="">選択してください（任意）</option>
+            <option value="twitter">Twitter / X</option>
+            <option value="google">Google検索</option>
+            <option value="youtube">YouTube</option>
+            <option value="blog">ブログ記事</option>
+            <option value="friend">友人・知人の紹介</option>
+            <option value="other">その他</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- OAuth連携（任意） -->
+      <div class="oauth-section">
+        <h3>OAuth連携（任意）</h3>
+        <p>Google または GitHub アカウントで連携すると、今後のログインが簡単になります</p>
+        <div class="oauth-buttons">
+          <button type="button" class="btn btn-oauth btn-google" id="googleOAuth">
+            <svg class="oauth-icon" viewBox="0 0 24 24">
+              <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+              <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+              <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+              <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+            </svg>
+            Google
+          </button>
+
+          <button type="button" class="btn btn-oauth btn-github" id="githubOAuth">
+            <svg class="oauth-icon" viewBox="0 0 24 24">
+              <path fill="#181717" d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
+            </svg>
+            GitHub
+          </button>
+        </div>
+      </div>
+
+      <button type="submit" class="btn btn-primary">申請を送信</button>
+    </form>
+
+    <div class="login-link">
+      すでにアカウントをお持ちですか？ <a href="/login">ログイン</a>
+    </div>
+  </div>
+
+  <script>
+    // パスワード一致チェック
+    const passwordInput = document.getElementById('password');
+    const confirmInput = document.getElementById('password_confirm');
+    const submitBtn = document.querySelector('.btn-primary');
+
+    function validatePassword() {
+      if (confirmInput.value && passwordInput.value !== confirmInput.value) {
+        confirmInput.setCustomValidity('パスワードが一致しません');
+      } else {
+        confirmInput.setCustomValidity('');
+      }
+    }
+
+    passwordInput.addEventListener('input', validatePassword);
+    confirmInput.addEventListener('input', validatePassword);
+
+    // フォーム送信
+    document.getElementById('applyForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+
+      // バリデーション
+      const purpose = document.getElementById('purpose').value;
+      if (purpose.length < 50) {
+        alert('利用目的は50文字以上で記入してください');
+        return;
+      }
+
+      // デモ: 申請成功
+      alert('申請を受け付けました！審査完了までお待ちください。（モックアップ）');
+      // 実際の実装では P-007（審査待ちページ）へ遷移
+    });
+
+    // OAuth連携のデモ
+    document.getElementById('googleOAuth').addEventListener('click', function() {
+      alert('Google OAuth連携処理開始（モックアップ）');
+    });
+
+    document.getElementById('githubOAuth').addEventListener('click', function() {
+      alert('GitHub OAuth連携処理開始（モックアップ）');
+    });
+  </script>
+</body>
+</html>

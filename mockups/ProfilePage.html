@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>マイプロフィール - マザーAI</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Roboto', sans-serif; background-color: #f5f5f5; }
+    .header { background-color: #1976d2; color: white; height: 64px; display: flex; align-items: center; padding: 0 24px; }
+    .header-logo { font-size: 24px; font-weight: 700; }
+    .sidebar { position: fixed; left: 0; top: 64px; bottom: 0; width: 240px; background: white; border-right: 1px solid #e0e0e0; padding: 24px 0; }
+    .sidebar-item { padding: 12px 24px; cursor: pointer; }
+    .sidebar-item.active { background-color: #e3f2fd; color: #1976d2; font-weight: 600; border-left: 4px solid #1976d2; }
+    .main-content { margin-left: 240px; margin-top: 64px; padding: 32px; }
+    .page-title { font-size: 32px; font-weight: 700; margin-bottom: 32px; }
+    .card { background: white; border-radius: 12px; padding: 24px; margin-bottom: 24px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+    .card-title { font-size: 20px; font-weight: 600; margin-bottom: 20px; padding-bottom: 12px; border-bottom: 2px solid #1976d2; }
+    .form-group { margin-bottom: 20px; }
+    .form-group label { display: block; font-size: 14px; font-weight: 500; margin-bottom: 8px; }
+    .form-group input { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 16px; }
+    .btn-primary { background-color: #1976d2; color: white; padding: 12px 24px; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; }
+    .api-usage { display: flex; justify-content: space-between; padding: 16px; background: #f5f5f5; border-radius: 8px; margin-bottom: 12px; }
+    .usage-label { font-weight: 600; }
+    @media (max-width: 768px) { .sidebar { display: none; } .main-content { margin-left: 0; } }
+  </style>
+</head>
+<body>
+  <div class="header"><div class="header-logo">マザーAI</div></div>
+  <div class="sidebar">
+    <div class="sidebar-item"><a href="/projects">プロジェクト</a></div>
+    <div class="sidebar-item active"><a href="/profile">マイプロフィール</a></div>
+  </div>
+  <div class="main-content">
+    <h1 class="page-title">マイプロフィール</h1>
+
+    <div class="card">
+      <h2 class="card-title">基本情報</h2>
+      <div class="form-group">
+        <label>お名前</label>
+        <input type="text" value="山田 太郎">
+      </div>
+      <div class="form-group">
+        <label>メールアドレス</label>
+        <input type="email" value="yamada@example.com" disabled>
+      </div>
+      <button class="btn-primary">更新</button>
+    </div>
+
+    <div class="card">
+      <h2 class="card-title">Claude API設定</h2>
+      <div class="form-group">
+        <label>Claude APIキー</label>
+        <input type="password" placeholder="sk-ant-...">
+      </div>
+      <button class="btn-primary">保存</button>
+    </div>
+
+    <div class="card">
+      <h2 class="card-title">API使用量</h2>
+      <div class="api-usage">
+        <span class="usage-label">今月の使用量</span>
+        <span>1,234,567 トークン</span>
+      </div>
+      <div class="api-usage">
+        <span class="usage-label">推定コスト</span>
+        <span>¥3,456</span>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

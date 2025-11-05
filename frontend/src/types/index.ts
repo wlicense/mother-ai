@@ -207,3 +207,79 @@ export interface DashboardStats {
   totalAPIUsage: number
   thisMonthCost: number
 }
+
+// ================================
+// 管理者統計
+// ================================
+
+export interface AdminStats {
+  pendingApplications: number
+  approvedThisMonth: number
+  rejectedThisMonth: number
+  approvalRate: number
+  totalUsers: number
+  activeUsers: number
+  suspendedUsers: number
+  todayAPIUsage: number
+  monthlyAPIUsage: number
+  todayCost: number
+  monthlyCost: number
+}
+
+// ================================
+// Phase定義
+// ================================
+
+export interface PhaseDefinition {
+  phaseNumber: number
+  phaseName: string
+  description: string
+  icon: string
+  agentType: 'requirements' | 'codegen' | 'deploy' | 'self-improve'
+}
+
+export const PHASE_DEFINITIONS: PhaseDefinition[] = [
+  {
+    phaseNumber: 1,
+    phaseName: 'Phase 1',
+    description: '要件定義エージェント',
+    icon: '📋',
+    agentType: 'requirements'
+  },
+  {
+    phaseNumber: 2,
+    phaseName: 'Phase 2',
+    description: 'コード生成エージェント',
+    icon: '⚡',
+    agentType: 'codegen'
+  },
+  {
+    phaseNumber: 3,
+    phaseName: 'Phase 3',
+    description: 'デプロイエージェント',
+    icon: '🚀',
+    agentType: 'deploy'
+  },
+  {
+    phaseNumber: 4,
+    phaseName: 'Phase 4',
+    description: '自己改善エージェント',
+    icon: '🔧',
+    agentType: 'self-improve'
+  }
+]
+
+// ================================
+// ファイルツリー
+// ================================
+
+export interface FileTreeNode {
+  id: string
+  name: string
+  path: string
+  type: 'file' | 'folder'
+  language?: CodeLanguage
+  children?: FileTreeNode[]
+  size?: number
+  lastModified?: string
+}
