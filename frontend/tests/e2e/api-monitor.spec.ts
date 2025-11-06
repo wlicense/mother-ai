@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { loginAsApprovedUser } from './helpers';
+import { loginAsApprovedUser, loginAsAdmin } from './helpers';
 
 /**
  * A-003: API監視ダッシュボード E2Eテスト
@@ -9,11 +9,23 @@ test.describe('A-003: API監視ダッシュボード', () => {
   /**
    * E2E-A003-001: リアルタイム監視表示
    *
-   * テスト対象外:
-   * - 管理者権限が必要
+   * 前提条件:
+   * - 管理者アカウントでログイン
+   *
+   * 期待結果:
+   * - API監視ページが表示される
+   * - ページタイトルが表示される
    */
-  test.skip('E2E-A003-001: リアルタイム監視表示', async ({ page }) => {
-    // TODO: 管理者ユーザーのテストデータが必要
+  test('E2E-A003-001: リアルタイム監視表示', async ({ page }) => {
+    // 1. 管理者でログイン
+    await loginAsAdmin(page);
+
+    // 2. API監視ページにアクセス
+    await page.goto('/admin/api-monitor');
+
+    // 3. ページタイトルを確認
+    const heading = page.locator('h1, h2, h3, h4').filter({ hasText: /API監視|API|監視/i }).first();
+    await expect(heading).toBeVisible({ timeout: 5000 });
   });
 
   /**

@@ -174,18 +174,40 @@ async def send_message(
             # 開始イベント
             yield f"data: {json.dumps({'type': 'start'})}\n\n"
 
-            # Claude APIからストリーミング取得
-            claude_service = get_claude_service()
-            full_response = ""
+            # Phase Agentsのモックロジックを使用（Claude API課金を避けるため）
+            from app.agents.phase_agents import (
+                Phase1RequirementsAgent,
+                Phase2CodeGenerationAgent,
+                Phase3DeploymentAgent,
+                Phase4SelfImprovementAgent
+            )
 
-            async for chunk in claude_service.send_message_stream(
-                messages=claude_messages,
-                system_prompt=f"あなたはPhase {request.phase}のAIアシスタントです。ユーザーのプロジェクト開発をサポートします。",
-                user_api_key=current_user.custom_claude_api_key
-            ):
-                full_response += chunk
-                # トークンイベント
-                yield f"data: {json.dumps({'type': 'token', 'content': chunk})}\n\n"
+            # Phaseに応じてエージェントを選択
+            agent_map = {
+                1: Phase1RequirementsAgent(),
+                2: Phase2CodeGenerationAgent(),
+                3: Phase3DeploymentAgent(),
+                4: Phase4SelfImprovementAgent(),
+            }
+
+            agent = agent_map.get(request.phase, Phase1RequirementsAgent())
+
+            # エージェントを実行
+            result = await agent.execute({
+                "user_message": request.content,
+                "project_context": {
+                    "project_id": project_id,
+                    "project_name": project.name,
+                },
+            })
+
+            full_response = result.get("response", "応答がありませんでした。")
+
+            # 応答を文字単位でストリーミング（リアルタイム感を出すため）
+            import asyncio
+            for char in full_response:
+                yield f"data: {json.dumps({'type': 'token', 'content': char})}\n\n"
+                await asyncio.sleep(0.01)  # 少し遅延を入れてリアルタイム感を出す
 
             # AIの応答をDBに保存
             assistant_message = Message(

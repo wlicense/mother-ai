@@ -59,6 +59,11 @@ export default function ApplicationsPage() {
     }
   }
 
+  const handleDialogClose = () => {
+    setSelectedApp(null)
+    setRejectReason('')
+  }
+
   if (isLoading) {
     return (
       <Box sx={{ display: 'flex', justifyContent: 'center', py: 8 }}>
@@ -141,7 +146,7 @@ export default function ApplicationsPage() {
       </Card>
 
       {/* Reject Dialog */}
-      <Dialog open={!!selectedApp} onClose={() => setSelectedApp(null)} maxWidth="sm" fullWidth>
+      <Dialog open={!!selectedApp} onClose={handleDialogClose} maxWidth="sm" fullWidth>
         <DialogTitle>申請を却下</DialogTitle>
         <DialogContent>
           <Typography variant="body2" paragraph>
@@ -151,19 +156,24 @@ export default function ApplicationsPage() {
             fullWidth
             multiline
             rows={4}
+            label="却下理由"
             value={rejectReason}
             onChange={(e) => setRejectReason(e.target.value)}
             placeholder="例: 利用目的が不明確です。具体的なプロジェクト内容を記載してください。"
           />
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setSelectedApp(null)}>キャンセル</Button>
+          <Button onClick={handleDialogClose} disabled={rejectMutation.isPending}>
+            キャンセル
+          </Button>
           <Button
             variant="contained"
             color="error"
             onClick={() => selectedApp && handleReject(selectedApp.id)}
+            disabled={rejectMutation.isPending || !rejectReason.trim()}
+            startIcon={rejectMutation.isPending ? <CircularProgress size={20} /> : null}
           >
-            却下する
+            {rejectMutation.isPending ? '却下中...' : '却下する'}
           </Button>
         </DialogActions>
       </Dialog>

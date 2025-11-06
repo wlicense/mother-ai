@@ -58,8 +58,7 @@ test.describe('P-006: マイプロフィール・設定', () => {
    * - プロフィールが更新される
    * - 成功メッセージが表示される
    */
-  test.skip('E2E-P006-002: プロフィール編集', async ({ page }) => {
-    // TODO: バックエンドのプロフィール更新APIが正しく動作していないため保留
+  test('E2E-P006-002: プロフィール編集', async ({ page }) => {
     // 1. 承認済みユーザーでログイン
     await loginAsApprovedUser(page);
 

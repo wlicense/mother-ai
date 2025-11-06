@@ -69,9 +69,14 @@ async def approve_application(
     return {"data": {"message": "ユーザーを承認しました", "userId": user.id}}
 
 
+class RejectApplicationRequest(BaseModel):
+    reason: str
+
+
 @router.put("/applications/{id}/reject")
 async def reject_application(
     id: str,
+    request: RejectApplicationRequest,
     current_user: User = Depends(get_current_admin_user),
     db: Session = Depends(get_db)
 ):
@@ -87,7 +92,7 @@ async def reject_application(
         raise HTTPException(status_code=400, detail="このユーザーは既に処理されています")
 
     user.status = UserStatus.rejected
-    user.rejection_reason = "管理者による却下"  # TODO: リクエストボディから理由を取得
+    user.rejection_reason = request.reason
     db.commit()
 
     # ユーザーにメール通知を送る

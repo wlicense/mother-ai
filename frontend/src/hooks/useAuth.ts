@@ -37,14 +37,8 @@ export const useLogin = () => {
  * 登録フック
  */
 export const useRegister = () => {
-  const navigate = useNavigate();
-
   return useMutation({
     mutationFn: (data: RegisterRequest) => authService.register(data),
-    onSuccess: () => {
-      // 申請完了後、審査待ちページにリダイレクト
-      navigate('/pending');
-    },
     onError: (error: any) => {
       console.error('登録エラー:', error);
     },

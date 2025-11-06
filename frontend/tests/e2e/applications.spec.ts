@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { loginAsApprovedUser } from './helpers';
+import { loginAsApprovedUser, loginAsAdmin } from './helpers';
 
 /**
  * A-001: 申請審査ダッシュボード E2Eテスト
@@ -18,13 +18,9 @@ test.describe('A-001: 申請審査ダッシュボード', () => {
    * - テーブルヘッダーが表示される
    * - 空状態メッセージまたは申請リストが表示される
    */
-  test.skip('E2E-A001-001: 申請一覧表示', async ({ page }) => {
-    // TODO: 管理者ユーザーのテストデータが必要
-    // 現在のテストユーザー(e2etest@example.com)は一般ユーザーのため、
-    // 管理者権限が必要なこのテストはスキップ
-
+  test('E2E-A001-001: 申請一覧表示', async ({ page }) => {
     // 1. 管理者でログイン
-    // await loginAsAdmin(page);
+    await loginAsAdmin(page);
 
     // 2. 申請審査ページにアクセス
     await page.goto('/admin/applications');
@@ -56,23 +52,83 @@ test.describe('A-001: 申請審査ダッシュボード', () => {
   /**
    * E2E-A001-003: 申請承認
    *
-   * テスト対象外:
-   * - 管理者ユーザーとテストデータのセットアップが必要
+   * 前提条件:
+   * - 管理者アカウントでログイン
+   * - pending1@example.com が pending 状態で存在
+   *
+   * 期待結果:
+   * - 承認ボタンをクリックして承認できる
+   * - 申請が一覧から消える（approved状態になる）
    */
-  test.skip('E2E-A001-003: 申請承認', async ({ page }) => {
-    // TODO: 管理者ユーザーとpending状態の申請データが必要
-    // テストデータセットアップ後に実装
+  test('E2E-A001-003: 申請承認', async ({ page }) => {
+    // 1. 管理者でログイン
+    await loginAsAdmin(page);
+
+    // 2. 申請審査ページにアクセス
+    await page.goto('/admin/applications');
+    await page.waitForLoadState('networkidle');
+
+    // 3. pending1@example.comの申請が表示されることを確認
+    const pending1Email = page.locator('text=pending1@example.com');
+    await expect(pending1Email).toBeVisible({ timeout: 5000 });
+
+    // 4. 承認ボタンを探してクリック
+    // pending1@example.comの行にある承認ボタン
+    const approveButton = page.locator('tr')
+      .filter({ has: page.locator('text=pending1@example.com') })
+      .getByRole('button', { name: /承認/i });
+
+    await approveButton.click();
+
+    // 5. pending1@example.comが一覧から消えることを確認
+    await expect(pending1Email).not.toBeVisible({ timeout: 5000 });
   });
 
   /**
    * E2E-A001-004: 申請却下
    *
-   * テスト対象外:
-   * - 管理者ユーザーとテストデータのセットアップが必要
+   * 前提条件:
+   * - 管理者アカウントでログイン
+   * - pending2@example.com が pending 状態で存在
+   *
+   * 期待結果:
+   * - 却下ボタンをクリックして却下ダイアログが表示される
+   * - 却下理由を入力して却下できる
+   * - 申請が一覧から消える（rejected状態になる）
    */
-  test.skip('E2E-A001-004: 申請却下', async ({ page }) => {
-    // TODO: 管理者ユーザーとpending状態の申請データが必要
-    // テストデータセットアップ後に実装
+  test('E2E-A001-004: 申請却下', async ({ page }) => {
+    // 1. 管理者でログイン
+    await loginAsAdmin(page);
+
+    // 2. 申請審査ページにアクセス
+    await page.goto('/admin/applications');
+    await page.waitForLoadState('networkidle');
+
+    // 3. pending2@example.comの申請が表示されることを確認
+    const pending2Email = page.locator('text=pending2@example.com');
+    await expect(pending2Email).toBeVisible({ timeout: 5000 });
+
+    // 4. 却下ボタンを探してクリック
+    const rejectButton = page.locator('tr')
+      .filter({ has: page.locator('text=pending2@example.com') })
+      .getByRole('button', { name: /却下/i });
+
+    await rejectButton.click();
+
+    // 5. 却下ダイアログが表示されることを確認
+    const rejectDialog = page.getByRole('heading', { name: /却下/i });
+    await expect(rejectDialog).toBeVisible({ timeout: 5000 });
+
+    // 6. 却下理由を入力
+    const reasonInput = page.getByLabel(/理由/i);
+    await reasonInput.fill('E2Eテスト用の却下');
+
+    // 7. 却下確定ボタンをクリック
+    const confirmRejectButton = page.getByRole('button', { name: /却下/i }).last();
+    await confirmRejectButton.click();
+
+    // 8. pending2@example.comが一覧から消えることを確認
+    await expect(pending2Email).not.toBeVisible({ timeout: 5000 });
   });
 
   /**
@@ -135,10 +191,48 @@ test.describe('A-001: 申請審査ダッシュボード', () => {
   /**
    * E2E-A001-102: 却下理由が空で却下試行
    *
-   * テスト対象外:
-   * - 管理者ユーザーとテストデータのセットアップが必要
+   * 前提条件:
+   * - 管理者アカウントでログイン
+   * - pending3@example.com が pending 状態で存在
+   *
+   * 期待結果:
+   * - 却下ダイアログで理由を入力しないと却下ボタンが無効
    */
-  test.skip('E2E-A001-102: 却下理由が空で却下試行', async ({ page }) => {
-    // TODO: 管理者ユーザーとテストデータ準備後に実装
+  test('E2E-A001-102: 却下理由が空で却下試行', async ({ page }) => {
+    // 1. 管理者でログイン
+    await loginAsAdmin(page);
+
+    // 2. 申請審査ページにアクセス
+    await page.goto('/admin/applications');
+    await page.waitForLoadState('networkidle');
+
+    // 3. pending3@example.comの申請が表示されることを確認
+    const pending3Email = page.locator('text=pending3@example.com');
+    await expect(pending3Email).toBeVisible({ timeout: 5000 });
+
+    // 4. 却下ボタンを探してクリック
+    const rejectButton = page.locator('tr')
+      .filter({ has: page.locator('text=pending3@example.com') })
+      .getByRole('button', { name: /却下/i });
+
+    await rejectButton.click();
+
+    // 5. 却下ダイアログが表示されることを確認
+    const rejectDialog = page.getByRole('heading', { name: /却下/i });
+    await expect(rejectDialog).toBeVisible({ timeout: 5000 });
+
+    // 6. 却下理由フィールドが空のとき、却下ボタンが無効であることを確認
+    const confirmRejectButton = page.getByRole('button', { name: /却下/i }).last();
+    await expect(confirmRejectButton).toBeDisabled();
+
+    // 7. キャンセルボタンをクリックしてダイアログを閉じる
+    const cancelButton = page.getByRole('button', { name: /キャンセル/i }).last();
+    await cancelButton.click();
+
+    // 8. ダイアログが閉じられることを確認
+    await expect(rejectDialog).not.toBeVisible({ timeout: 5000 });
+
+    // 9. pending3@example.comが一覧に残っていることを確認（却下されていない）
+    await expect(pending3Email).toBeVisible();
   });
 });

@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
   Box,
@@ -26,6 +26,16 @@ export default function ApplyPage() {
   const [success, setSuccess] = useState(false)
 
   const registerMutation = useRegister()
+
+  // 成功後3秒でログインページへリダイレクト
+  useEffect(() => {
+    if (success) {
+      const timer = setTimeout(() => {
+        navigate('/login')
+      }, 3000)
+      return () => clearTimeout(timer)
+    }
+  }, [success, navigate])
 
   const handleChange = (field: string) => (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({ ...formData, [field]: e.target.value })

@@ -19,16 +19,20 @@ import {
 } from '@mui/material'
 import AddIcon from '@mui/icons-material/Add'
 import FolderIcon from '@mui/icons-material/Folder'
-import { useProjects, useCreateProject } from '../../hooks/useProjects'
+import DeleteIcon from '@mui/icons-material/Delete'
+import { useProjects, useCreateProject, useDeleteProject } from '../../hooks/useProjects'
 
 export default function ProjectsPage() {
   const navigate = useNavigate()
   const [open, setOpen] = useState(false)
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
+  const [projectToDelete, setProjectToDelete] = useState<{ id: string; name: string } | null>(null)
   const [newProjectName, setNewProjectName] = useState('')
   const [newProjectDescription, setNewProjectDescription] = useState('')
 
   const { data: projects, isLoading, error } = useProjects()
   const createProjectMutation = useCreateProject()
+  const deleteProjectMutation = useDeleteProject()
 
   const handleCreateProject = async () => {
     if (!newProjectName.trim()) {
@@ -46,6 +50,28 @@ export default function ProjectsPage() {
     } catch (error) {
       console.error('プロジェクト作成エラー:', error)
     }
+  }
+
+  const handleDeleteClick = (projectId: string, projectName: string) => {
+    setProjectToDelete({ id: projectId, name: projectName })
+    setDeleteDialogOpen(true)
+  }
+
+  const handleDeleteConfirm = async () => {
+    if (!projectToDelete) return
+
+    try {
+      await deleteProjectMutation.mutateAsync(projectToDelete.id)
+      setDeleteDialogOpen(false)
+      setProjectToDelete(null)
+    } catch (error) {
+      console.error('プロジェクト削除エラー:', error)
+    }
+  }
+
+  const handleDeleteCancel = () => {
+    setDeleteDialogOpen(false)
+    setProjectToDelete(null)
   }
 
   const getStatusColor = (status: string) => {
@@ -94,7 +120,7 @@ export default function ProjectsPage() {
       )}
 
       {!isLoading && !error && projects && projects.length === 0 && (
-        <Box sx={{ textAlign: 'center', py: 8 }}>
+        <Box sx={{ textAlign: 'center', py: 8 }} data-testid="empty-projects-message">
           <Typography variant="body1" color="text.secondary">
             プロジェクトがありません。新規作成してください。
           </Typography>
@@ -104,7 +130,7 @@ export default function ProjectsPage() {
       <Grid container spacing={3}>
         {!isLoading && projects && projects.map((project) => (
           <Grid item xs={12} md={6} lg={4} key={project.id}>
-            <Card sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+            <Card sx={{ height: '100%', display: 'flex', flexDirection: 'column' }} data-testid="project-card">
               <CardContent sx={{ flexGrow: 1 }}>
                 <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
                   <FolderIcon sx={{ mr: 1, color: 'primary.main' }} />
@@ -128,12 +154,21 @@ export default function ProjectsPage() {
                 <Button size="small" onClick={() => navigate(`/projects/${project.id}`)}>
                   詳細を見る
                 </Button>
+                <Button
+                  size="small"
+                  color="error"
+                  startIcon={<DeleteIcon />}
+                  onClick={() => handleDeleteClick(project.id, project.name)}
+                >
+                  削除
+                </Button>
               </CardActions>
             </Card>
           </Grid>
         ))}
       </Grid>
 
+      {/* 新規プロジェクト作成ダイアログ */}
       <Dialog open={open} onClose={() => setOpen(false)} maxWidth="sm" fullWidth>
         <DialogTitle>新規プロジェクト作成</DialogTitle>
         <DialogContent>
@@ -164,6 +199,32 @@ export default function ProjectsPage() {
             startIcon={createProjectMutation.isPending ? <CircularProgress size={20} /> : null}
           >
             {createProjectMutation.isPending ? '作成中...' : '作成'}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* プロジェクト削除確認ダイアログ */}
+      <Dialog open={deleteDialogOpen} onClose={handleDeleteCancel} maxWidth="sm" fullWidth>
+        <DialogTitle>プロジェクトの削除</DialogTitle>
+        <DialogContent>
+          <Typography>
+            本当に「{projectToDelete?.name}」を削除しますか？
+            <br />
+            この操作は取り消せません。
+          </Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleDeleteCancel} disabled={deleteProjectMutation.isPending}>
+            キャンセル
+          </Button>
+          <Button
+            variant="contained"
+            color="error"
+            onClick={handleDeleteConfirm}
+            disabled={deleteProjectMutation.isPending}
+            startIcon={deleteProjectMutation.isPending ? <CircularProgress size={20} /> : null}
+          >
+            {deleteProjectMutation.isPending ? '削除中...' : '削除'}
           </Button>
         </DialogActions>
       </Dialog>

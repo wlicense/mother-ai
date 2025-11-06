@@ -58,6 +58,16 @@ export async function loginAsApprovedUser(page: Page): Promise<void> {
 }
 
 /**
+ * 管理者でログインし、プロジェクト一覧ページへ遷移
+ *
+ * @param page - Playwrightのpageオブジェクト
+ */
+export async function loginAsAdmin(page: Page): Promise<void> {
+  await login(page, 'admin@example.com', 'AdminTest2025!');
+  await expect(page).toHaveURL(/.*projects/, { timeout: 10000 });
+}
+
+/**
  * localStorageのJWTトークンを検証
  *
  * @param page - Playwrightのpageオブジェクト

@@ -35,10 +35,16 @@ test.describe('P-004: プロジェクト一覧・管理', () => {
 
     // 5. プロジェクトカードまたは空状態が表示されることを確認
     // (プロジェクトがあればカード、なければ空状態メッセージ)
-    const projectCards = page.locator('[data-testid="project-card"], .project-card, .MuiCard-root');
-    const emptyMessage = page.locator('text=/プロジェクトがありません|プロジェクトを作成/i');
+    const projectCards = page.locator('[data-testid="project-card"]');
+    const emptyMessage = page.locator('[data-testid="empty-projects-message"]');
 
-    // どちらかが表示されていればOK
+    // どちらかが表示されていればOK（タイムアウトを待つ）
+    await page.waitForSelector('[data-testid="project-card"], [data-testid="empty-projects-message"]', { timeout: 10000 })
+      .catch(() => {
+        // タイムアウトした場合、どちらも表示されていない
+        throw new Error('プロジェクトカードも空状態メッセージも表示されませんでした');
+      });
+
     const hasCards = await projectCards.first().isVisible().catch(() => false);
     const hasEmptyMessage = await emptyMessage.isVisible().catch(() => false);
 
@@ -94,11 +100,55 @@ test.describe('P-004: プロジェクト一覧・管理', () => {
   /**
    * E2E-P004-003: プロジェクト削除
    *
-   * テスト対象外:
-   * - プロジェクト削除機能が未実装
+   * 前提条件:
+   * - ログイン済み
+   * - プロジェクトが1つ以上存在
+   *
+   * 期待結果:
+   * - 削除確認ダイアログが表示される
+   * - プロジェクトが一覧から削除される
    */
-  test.skip('E2E-P004-003: プロジェクト削除', async ({ page }) => {
-    // TODO: プロジェクト削除機能実装後に追加
+  test('E2E-P004-003: プロジェクト削除', async ({ page }) => {
+    // 1. 承認済みユーザーでログイン
+    await loginAsApprovedUser(page);
+
+    // 2. プロジェクトを作成
+    const createButton = page.getByRole('button', { name: '新規プロジェクト' });
+    await createButton.click();
+
+    const dialogTitle = page.getByRole('heading', { name: '新規プロジェクト作成' });
+    await expect(dialogTitle).toBeVisible({ timeout: 5000 });
+
+    const projectNameInput = page.getByLabel('プロジェクト名');
+    const testProjectName = `削除テスト用プロジェクト_${Date.now()}`;
+    await projectNameInput.fill(testProjectName);
+
+    const submitButton = page.getByRole('button', { name: '作成', exact: true });
+    await submitButton.click();
+
+    await expect(dialogTitle).not.toBeVisible({ timeout: 5000 });
+
+    // 3. 削除ボタンをクリック
+    const projectCard = page.locator('text=' + testProjectName).first();
+    await expect(projectCard).toBeVisible({ timeout: 5000 });
+
+    // プロジェクトカード内の削除ボタンを見つける
+    const deleteButton = page.locator('.MuiCard-root').filter({ has: page.locator(`text=${testProjectName}`) }).getByRole('button', { name: '削除' });
+    await deleteButton.click();
+
+    // 4. 削除確認ダイアログが表示されることを確認
+    const deleteDialog = page.getByRole('heading', { name: 'プロジェクトの削除' });
+    await expect(deleteDialog).toBeVisible({ timeout: 5000 });
+
+    // 5. 削除確認
+    const confirmButton = page.getByRole('button', { name: '削除', exact: true });
+    await confirmButton.click();
+
+    // 6. ダイアログが閉じられることを確認
+    await expect(deleteDialog).not.toBeVisible({ timeout: 5000 });
+
+    // 7. プロジェクトが一覧から削除されていることを確認
+    await expect(projectCard).not.toBeVisible({ timeout: 5000 });
   });
 
   /**
@@ -145,11 +195,35 @@ test.describe('P-004: プロジェクト一覧・管理', () => {
   /**
    * E2E-P004-101: 削除確認モーダルキャンセル
    *
-   * テスト対象外:
-   * - プロジェクト削除機能が未実装
+   * 前提条件:
+   * - ログイン済み
+   * - プロジェクトが1つ以上存在
+   *
+   * 期待結果:
+   * - キャンセルするとプロジェクトは削除されない
    */
-  test.skip('E2E-P004-101: 削除確認モーダルキャンセル', async ({ page }) => {
-    // TODO: プロジェクト削除機能実装後に追加
+  test('E2E-P004-101: 削除確認モーダルキャンセル', async ({ page }) => {
+    // 1. 承認済みユーザーでログイン
+    await loginAsApprovedUser(page);
+
+    // 2. 削除ボタンをクリック
+    const deleteButton = page.getByRole('button', { name: '削除' }).first();
+    await deleteButton.click();
+
+    // 3. 削除確認ダイアログが表示されることを確認
+    const deleteDialog = page.getByRole('heading', { name: 'プロジェクトの削除' });
+    await expect(deleteDialog).toBeVisible({ timeout: 5000 });
+
+    // 4. キャンセルボタンをクリック
+    const cancelButton = page.getByRole('button', { name: 'キャンセル' }).last();
+    await cancelButton.click();
+
+    // 5. ダイアログが閉じられることを確認
+    await expect(deleteDialog).not.toBeVisible({ timeout: 5000 });
+
+    // 6. プロジェクトが一覧に残っていることを確認
+    const projectCards = page.locator('.MuiCard-root');
+    await expect(projectCards.first()).toBeVisible();
   });
 
   /**

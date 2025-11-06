@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { loginAsApprovedUser } from './helpers';
+import { loginAsApprovedUser, loginAsAdmin } from './helpers';
 
 /**
  * A-002: ユーザー・プロジェクト管理 E2Eテスト
@@ -9,11 +9,33 @@ test.describe('A-002: ユーザー・プロジェクト管理', () => {
   /**
    * E2E-A002-001: 全ユーザー一覧表示
    *
-   * テスト対象外:
-   * - 管理者権限が必要
+   * 前提条件:
+   * - 管理者アカウントでログイン
+   *
+   * 期待結果:
+   * - ユーザー一覧ページが表示される
+   * - ページタイトルが表示される
+   * - テーブルヘッダーまたは空状態メッセージが表示される
    */
-  test.skip('E2E-A002-001: 全ユーザー一覧表示', async ({ page }) => {
-    // TODO: 管理者ユーザーのテストデータが必要
+  test('E2E-A002-001: 全ユーザー一覧表示', async ({ page }) => {
+    // 1. 管理者でログイン
+    await loginAsAdmin(page);
+
+    // 2. ユーザー管理ページにアクセス
+    await page.goto('/admin/users');
+
+    // 3. ページタイトルを確認
+    const heading = page.locator('h1, h2, h3, h4').filter({ hasText: /ユーザー|管理/i }).first();
+    await expect(heading).toBeVisible({ timeout: 5000 });
+
+    // 4. テーブルヘッダーまたは空状態メッセージを確認
+    const tableHeader = page.locator('text=/氏名|メール|ステータス|権限/i').first();
+    const emptyMessage = page.locator('text=/ユーザーが見つかりません/i').first();
+
+    const hasTable = await tableHeader.isVisible().catch(() => false);
+    const hasEmptyMessage = await emptyMessage.isVisible().catch(() => false);
+
+    expect(hasTable || hasEmptyMessage).toBeTruthy();
   });
 
   /**

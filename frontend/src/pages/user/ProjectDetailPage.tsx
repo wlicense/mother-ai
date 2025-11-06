@@ -23,6 +23,8 @@ import DescriptionIcon from '@mui/icons-material/Description'
 import RocketLaunchIcon from '@mui/icons-material/RocketLaunch'
 import AutoFixHighIcon from '@mui/icons-material/AutoFixHigh'
 import { useProject, useSendMessage } from '../../hooks/useProjects'
+import CodeEditor from '../../components/CodeEditor'
+import FileTree, { FileNode } from '../../components/FileTree'
 
 // Phase定義
 const phases = [
@@ -60,12 +62,56 @@ const phases = [
   },
 ]
 
+// モックファイルツリーデータ（Phase 2用）
+const mockFileTree: FileNode[] = [
+  {
+    name: 'src',
+    type: 'folder',
+    path: 'src',
+    children: [
+      {
+        name: 'index.ts',
+        type: 'file',
+        path: 'src/index.ts',
+        language: 'typescript',
+      },
+      {
+        name: 'App.tsx',
+        type: 'file',
+        path: 'src/App.tsx',
+        language: 'typescript',
+      },
+      {
+        name: 'components',
+        type: 'folder',
+        path: 'src/components',
+        children: [
+          {
+            name: 'Header.tsx',
+            type: 'file',
+            path: 'src/components/Header.tsx',
+            language: 'typescript',
+          },
+        ],
+      },
+    ],
+  },
+  {
+    name: 'package.json',
+    type: 'file',
+    path: 'package.json',
+    language: 'json',
+  },
+]
+
 export default function ProjectDetailPage() {
   const { id } = useParams()
   const [selectedPhase, setSelectedPhase] = useState(1)
   const [message, setMessage] = useState('')
   const [streamingMessage, setStreamingMessage] = useState('')
   const [isStreaming, setIsStreaming] = useState(false)
+  const [selectedFile, setSelectedFile] = useState<FileNode | null>(null)
+  const [fileContent, setFileContent] = useState('')
   const messagesEndRef = useRef<HTMLDivElement>(null)
 
   const { data: project, isLoading, error } = useProject(id!)
@@ -121,6 +167,28 @@ export default function ProjectDetailPage() {
       setIsStreaming(false)
       setStreamingMessage('')
       console.error('メッセージ送信エラー:', error)
+    }
+  }
+
+  const handleFileSelect = (file: FileNode) => {
+    setSelectedFile(file)
+    // モックコンテンツ（実際はバックエンドから取得）
+    const mockContent = `// ${file.path}
+// モックコンテンツ - Phase 2でAIが生成したコード
+
+export function example() {
+  console.log('This is a mock file')
+  return 'Hello, World!'
+}
+`
+    setFileContent(mockContent)
+  }
+
+  const handleCodeChange = (value: string | undefined) => {
+    if (value !== undefined) {
+      setFileContent(value)
+      // TODO: 実装時にバックエンドへ保存
+      console.log('コード変更:', value)
     }
   }
 
@@ -224,100 +292,159 @@ export default function ProjectDetailPage() {
         </Grid>
       </Box>
 
-      {/* Chat Interface */}
-      <Paper sx={{ p: 3 }}>
-        <Typography variant="h6" gutterBottom>
-          {phases.find((p) => p.id === selectedPhase)?.title} - AI対話
-        </Typography>
-        <Divider sx={{ mb: 2 }} />
-
-        {/* Messages */}
-        <Box
-          sx={{
-            height: 400,
-            overflowY: 'auto',
-            mb: 2,
-            p: 2,
-            bgcolor: 'background.default',
-            borderRadius: 1,
-          }}
-        >
-          {phaseMessages.length === 0 && !streamingMessage && (
-            <Typography variant="body2" color="text.secondary" textAlign="center">
-              メッセージがありません。最初のメッセージを送信してください。
-            </Typography>
-          )}
-
-          {phaseMessages.map((msg) => (
-            <Box
-              key={msg.id}
-              sx={{
-                mb: 2,
-                display: 'flex',
-                justifyContent: msg.role === 'user' ? 'flex-end' : 'flex-start',
-              }}
-            >
-              <Paper
-                sx={{
-                  p: 2,
-                  maxWidth: '70%',
-                  bgcolor: msg.role === 'user' ? 'primary.main' : 'grey.100',
-                  color: msg.role === 'user' ? 'white' : 'text.primary',
-                }}
-              >
-                <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap' }}>
-                  {msg.content}
-                </Typography>
+      {/* Phase 2: Code Editor + File Tree */}
+      {selectedPhase === 2 ? (
+        <Box>
+          <Typography variant="h6" gutterBottom>
+            {phases.find((p) => p.id === selectedPhase)?.title} - コードエディタ
+          </Typography>
+          <Divider sx={{ mb: 2 }} />
+          <Grid container spacing={2}>
+            {/* File Tree */}
+            <Grid item xs={12} md={3}>
+              <Paper sx={{ height: 600, overflow: 'auto' }}>
+                <Box sx={{ p: 2, bgcolor: 'primary.main', color: 'white' }}>
+                  <Typography variant="subtitle1" fontWeight="bold">
+                    ファイル
+                  </Typography>
+                </Box>
+                <FileTree
+                  files={mockFileTree}
+                  onFileSelect={handleFileSelect}
+                  selectedFile={selectedFile?.path}
+                />
               </Paper>
-            </Box>
-          ))}
+            </Grid>
 
-          {/* ストリーミング中のメッセージ */}
-          {streamingMessage && (
-            <Box
-              sx={{
-                mb: 2,
-                display: 'flex',
-                justifyContent: 'flex-start',
-              }}
-            >
-              <Paper
-                sx={{
-                  p: 2,
-                  maxWidth: '70%',
-                  bgcolor: 'grey.100',
-                  color: 'text.primary',
-                }}
-              >
-                <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap' }}>
-                  {streamingMessage}
-                </Typography>
-              </Paper>
-            </Box>
-          )}
-
-          <div ref={messagesEndRef} />
+            {/* Code Editor */}
+            <Grid item xs={12} md={9}>
+              {selectedFile ? (
+                <Box>
+                  <Paper sx={{ p: 1, mb: 1 }}>
+                    <Typography variant="body2" color="text.secondary">
+                      {selectedFile.path}
+                    </Typography>
+                  </Paper>
+                  <CodeEditor
+                    value={fileContent}
+                    onChange={handleCodeChange}
+                    language={selectedFile.language}
+                    height={550}
+                  />
+                </Box>
+              ) : (
+                <Paper
+                  sx={{
+                    height: 600,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}
+                >
+                  <Typography variant="body1" color="text.secondary">
+                    ファイルを選択してください
+                  </Typography>
+                </Paper>
+              )}
+            </Grid>
+          </Grid>
         </Box>
+      ) : (
+        /* Chat Interface for other phases */
+        <Paper sx={{ p: 3 }}>
+          <Typography variant="h6" gutterBottom>
+            {phases.find((p) => p.id === selectedPhase)?.title} - AI対話
+          </Typography>
+          <Divider sx={{ mb: 2 }} />
 
-        {/* Input */}
-        <Box sx={{ display: 'flex', gap: 1 }}>
-          <TextField
-            fullWidth
-            placeholder="メッセージを入力..."
-            value={message}
-            onChange={(e) => setMessage(e.target.value)}
-            onKeyPress={(e) => e.key === 'Enter' && !e.shiftKey && handleSendMessage()}
-            disabled={isStreaming}
-          />
-          <IconButton
-            color="primary"
-            onClick={handleSendMessage}
-            disabled={!message.trim() || isStreaming}
+          {/* Messages */}
+          <Box
+            sx={{
+              height: 400,
+              overflowY: 'auto',
+              mb: 2,
+              p: 2,
+              bgcolor: 'background.default',
+              borderRadius: 1,
+            }}
           >
-            {isStreaming ? <CircularProgress size={24} /> : <SendIcon />}
-          </IconButton>
-        </Box>
-      </Paper>
+            {phaseMessages.length === 0 && !streamingMessage && (
+              <Typography variant="body2" color="text.secondary" textAlign="center">
+                メッセージがありません。最初のメッセージを送信してください。
+              </Typography>
+            )}
+
+            {phaseMessages.map((msg) => (
+              <Box
+                key={msg.id}
+                sx={{
+                  mb: 2,
+                  display: 'flex',
+                  justifyContent: msg.role === 'user' ? 'flex-end' : 'flex-start',
+                }}
+              >
+                <Paper
+                  sx={{
+                    p: 2,
+                    maxWidth: '70%',
+                    bgcolor: msg.role === 'user' ? 'primary.main' : 'grey.100',
+                    color: msg.role === 'user' ? 'white' : 'text.primary',
+                  }}
+                >
+                  <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap' }}>
+                    {msg.content}
+                  </Typography>
+                </Paper>
+              </Box>
+            ))}
+
+            {/* ストリーミング中のメッセージ */}
+            {streamingMessage && (
+              <Box
+                sx={{
+                  mb: 2,
+                  display: 'flex',
+                  justifyContent: 'flex-start',
+                }}
+              >
+                <Paper
+                  sx={{
+                    p: 2,
+                    maxWidth: '70%',
+                    bgcolor: 'grey.100',
+                    color: 'text.primary',
+                  }}
+                >
+                  <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap' }}>
+                    {streamingMessage}
+                  </Typography>
+                </Paper>
+              </Box>
+            )}
+
+            <div ref={messagesEndRef} />
+          </Box>
+
+          {/* Input */}
+          <Box sx={{ display: 'flex', gap: 1 }}>
+            <TextField
+              fullWidth
+              placeholder="メッセージを入力..."
+              value={message}
+              onChange={(e) => setMessage(e.target.value)}
+              onKeyPress={(e) => e.key === 'Enter' && !e.shiftKey && handleSendMessage()}
+              disabled={isStreaming}
+            />
+            <IconButton
+              color="primary"
+              onClick={handleSendMessage}
+              disabled={!message.trim() || isStreaming}
+            >
+              {isStreaming ? <CircularProgress size={24} /> : <SendIcon />}
+            </IconButton>
+          </Box>
+        </Paper>
+      )}
     </Box>
   )
 }

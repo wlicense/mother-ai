@@ -120,16 +120,17 @@ export const updateProfile = async (data: {
   name?: string;
   custom_claude_api_key?: string;
 }): Promise<User> => {
-  const response = await apiClient.put<User>('/api/v1/users/me', data);
+  const response = await apiClient.put<{ data: any; message: string }>('/api/v1/users/me', data);
 
   // ローカルストレージのユーザー情報も更新
   const currentUser = getCurrentUser();
-  if (currentUser) {
-    const updatedUser = { ...currentUser, ...response.data };
+  if (currentUser && response.data.data) {
+    const updatedUser = { ...currentUser, ...response.data.data };
     localStorage.setItem('user', JSON.stringify(updatedUser));
+    return updatedUser as User;
   }
 
-  return response.data;
+  return response.data.data as User;
 };
 
 export default {

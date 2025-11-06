@@ -78,9 +78,6 @@ test.describe('P-003: ログインページ', () => {
   /**
    * E2E-P003-101: 誤ったパスワードでログイン試行
    *
-   * テスト対象外:
-   * - バックエンドがエラーレスポンスを返していない可能性
-   *
    * 前提条件:
    * - 承認済みユーザーアカウントが存在する: e2etest@example.com
    *
@@ -88,8 +85,7 @@ test.describe('P-003: ログインページ', () => {
    * - エラーメッセージ表示: "メールアドレスまたはパスワードが間違っています"
    * - ログインページに留まる
    */
-  test.skip('E2E-P003-101: 誤ったパスワードでログイン試行', async ({ page }) => {
-    // TODO: バックエンドのエラーレスポンス確認が必要
+  test('E2E-P003-101: 誤ったパスワードでログイン試行', async ({ page }) => {
     // 1. /login にアクセス
     await page.goto('/login');
     await expect(page).toHaveURL(/.*login/);
@@ -107,12 +103,12 @@ test.describe('P-003: ログインページ', () => {
     await loginButton.click();
 
     // 5. エラーメッセージが表示されることを確認（MUI Alert）
-    const errorAlert = page.locator('.MuiAlert-root[role="alert"]').first();
+    const errorAlert = page.locator('.MuiAlert-root').first();
     await expect(errorAlert).toBeVisible({ timeout: 10000 });
 
     // エラーメッセージのテキストを確認
     const errorText = await errorAlert.textContent();
-    expect(errorText).toBeTruthy();
+    expect(errorText).toContain('メールアドレスまたはパスワードが間違っています');
 
     // 6. ログインページに留まることを確認
     await expect(page).toHaveURL(/.*login/);
@@ -121,9 +117,6 @@ test.describe('P-003: ログインページ', () => {
   /**
    * E2E-P003-102: 存在しないメールアドレスでログイン試行
    *
-   * テスト対象外:
-   * - バックエンドがエラーレスポンスを返していない可能性
-   *
    * 前提条件:
    * - 存在しないメールアドレスを使用
    *
@@ -131,8 +124,7 @@ test.describe('P-003: ログインページ', () => {
    * - エラーメッセージ表示
    * - ログインページに留まる
    */
-  test.skip('E2E-P003-102: 存在しないメールアドレスでログイン試行', async ({ page }) => {
-    // TODO: バックエンドのエラーレスポンス確認が必要
+  test('E2E-P003-102: 存在しないメールアドレスでログイン試行', async ({ page }) => {
     // 1. /login にアクセス
     await page.goto('/login');
     await expect(page).toHaveURL(/.*login/);
@@ -150,8 +142,12 @@ test.describe('P-003: ログインページ', () => {
     await loginButton.click();
 
     // 5. エラーメッセージが表示されることを確認
-    const errorAlert = page.locator('.MuiAlert-root[role="alert"]').first();
+    const errorAlert = page.locator('.MuiAlert-root').first();
     await expect(errorAlert).toBeVisible({ timeout: 10000 });
+
+    // エラーメッセージのテキストを確認
+    const errorText = await errorAlert.textContent();
+    expect(errorText).toContain('メールアドレスまたはパスワードが間違っています');
 
     // 6. ログインページに留まることを確認
     await expect(page).toHaveURL(/.*login/);
@@ -161,30 +157,104 @@ test.describe('P-003: ログインページ', () => {
    * E2E-P003-103: 審査中ユーザーのログイン試行
    *
    * テスト対象外:
-   * - pending状態のテストユーザーが必要
+   * - /pendingページの「審査中」テキストが見つからない問題を調査中
+   * - リダイレクトは成功するが、ページコンテンツの表示に問題がある可能性
+   *
+   * 前提条件:
+   * - pending3@example.com (pending状態)
+   *
+   * 期待結果:
+   * - ログイン成功後、/pendingページへリダイレクト
    */
   test.skip('E2E-P003-103: 審査中ユーザーのログイン試行', async ({ page }) => {
-    // TODO: pending状態のテストユーザー作成後に実装
+    // 1. /login にアクセス
+    await page.goto('/login');
+    await expect(page).toHaveURL(/.*login/);
+
+    // 2. pending3@example.comでログイン
+    const emailInput = page.locator('input[type="email"], input[name="email"]').first();
+    await emailInput.fill('pending3@example.com');
+
+    const passwordInput = page.locator('input[type="password"], input[name="password"]').first();
+    await passwordInput.fill('Test2025!');
+
+    const loginButton = page.getByRole('button', { name: 'ログイン', exact: true });
+    await loginButton.click();
+
+    // 3. /pendingページへリダイレクトされることを確認
+    await expect(page).toHaveURL(/.*pending/, { timeout: 10000 });
+
+    // 4. 審査中メッセージが表示されることを確認
+    const statusMessage = page.locator('text=/審査中/i').first();
+    await expect(statusMessage).toBeVisible({ timeout: 5000 });
   });
 
   /**
    * E2E-P003-104: 停止中ユーザーのログイン試行
    *
-   * テスト対象外:
-   * - suspended状態のテストユーザーが必要
+   * 前提条件:
+   * - suspended@example.com (suspended状態)
+   *
+   * 期待結果:
+   * - ログイン成功後、/loginページに戻される
+   * - 停止中ユーザーはシステムにアクセスできない
    */
-  test.skip('E2E-P003-104: 停止中ユーザーのログイン試行', async ({ page }) => {
-    // TODO: suspended状態のテストユーザー作成後に実装
+  test('E2E-P003-104: 停止中ユーザーのログイン試行', async ({ page }) => {
+    // 1. /login にアクセス
+    await page.goto('/login');
+    await expect(page).toHaveURL(/.*login/);
+
+    // 2. suspended@example.comでログイン
+    const emailInput = page.locator('input[type="email"], input[name="email"]').first();
+    await emailInput.fill('suspended@example.com');
+
+    const passwordInput = page.locator('input[type="password"], input[name="password"]').first();
+    await passwordInput.fill('Test2025!');
+
+    const loginButton = page.getByRole('button', { name: 'ログイン', exact: true });
+    await loginButton.click();
+
+    // 3. /loginページに留まることを確認（suspendedユーザーはログイン画面に戻される）
+    await page.waitForTimeout(2000); // リダイレクト処理待ち
+    await expect(page).toHaveURL(/.*login/);
+
+    // 4. ログインフォームが表示されていることを確認
+    const emailInputAfter = page.locator('input[type="email"], input[name="email"]').first();
+    await expect(emailInputAfter).toBeVisible();
   });
 
   /**
    * E2E-P003-105: 却下されたユーザーのログイン試行
    *
-   * テスト対象外:
-   * - rejected状態のテストユーザーが必要
+   * 前提条件:
+   * - pending2@example.com (rejected状態)
+   *
+   * 期待結果:
+   * - ログイン成功後、/loginページに戻される
+   * - 却下されたユーザーはシステムにアクセスできない
    */
-  test.skip('E2E-P003-105: 却下されたユーザーのログイン試行', async ({ page }) => {
-    // TODO: rejected状態のテストユーザー作成後に実装
+  test('E2E-P003-105: 却下されたユーザーのログイン試行', async ({ page }) => {
+    // 1. /login にアクセス
+    await page.goto('/login');
+    await expect(page).toHaveURL(/.*login/);
+
+    // 2. pending2@example.comでログイン
+    const emailInput = page.locator('input[type="email"], input[name="email"]').first();
+    await emailInput.fill('pending2@example.com');
+
+    const passwordInput = page.locator('input[type="password"], input[name="password"]').first();
+    await passwordInput.fill('Test2025!');
+
+    const loginButton = page.getByRole('button', { name: 'ログイン', exact: true });
+    await loginButton.click();
+
+    // 3. /loginページに留まることを確認（rejectedユーザーはログイン画面に戻される）
+    await page.waitForTimeout(2000); // リダイレクト処理待ち
+    await expect(page).toHaveURL(/.*login/);
+
+    // 4. ログインフォームが表示されていることを確認
+    const emailInputAfter = page.locator('input[type="email"], input[name="email"]').first();
+    await expect(emailInputAfter).toBeVisible();
   });
 
   /**

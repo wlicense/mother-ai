@@ -38,9 +38,11 @@ apiClient.interceptors.response.use(
     // エラーレスポンスの統一処理
     if (error.response) {
       const status = error.response.status;
+      const url = error.config?.url || '';
 
       // 401 Unauthorized: トークン無効/期限切れ
-      if (status === 401) {
+      // ただし、ログイン/登録エンドポイントは除外（認証エラーを表示するため）
+      if (status === 401 && !url.includes('/auth/login') && !url.includes('/auth/register')) {
         // トークンを削除してログイン画面にリダイレクト
         localStorage.removeItem('auth_token');
         localStorage.removeItem('user');
