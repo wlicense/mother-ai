@@ -1,0 +1,153 @@
+# Page snapshot
+
+```yaml
+- generic [ref=e4]:
+  - banner [ref=e5]:
+    - generic [ref=e6]:
+      - generic [ref=e7]:
+        - text: 🌱 マザーAI
+        - generic [ref=e9]: 管理者
+      - generic [ref=e10]:
+        - paragraph [ref=e12]: 管理者ユーザー
+        - button [ref=e13] [cursor=pointer]:
+          - img [ref=e15]
+  - navigation [ref=e17]:
+    - generic [ref=e19]:
+      - generic [ref=e21]: メニュー
+      - list [ref=e22]:
+        - listitem [ref=e23]:
+          - button "プロジェクト" [ref=e24] [cursor=pointer]:
+            - img [ref=e26]
+            - generic [ref=e29]: プロジェクト
+        - listitem [ref=e30]:
+          - button "プロフィール" [ref=e31] [cursor=pointer]:
+            - img [ref=e33]
+            - generic [ref=e36]: プロフィール
+      - separator [ref=e37]
+      - generic [ref=e38]: 管理者
+      - list [ref=e39]:
+        - listitem [ref=e40]:
+          - button "申請審査" [ref=e41] [cursor=pointer]:
+            - img [ref=e43]
+            - generic [ref=e47]: 申請審査
+        - listitem [ref=e48]:
+          - button "ユーザー管理" [ref=e49] [cursor=pointer]:
+            - img [ref=e51]
+            - generic [ref=e54]: ユーザー管理
+        - listitem [ref=e55]:
+          - button "API監視" [ref=e56] [cursor=pointer]:
+            - img [ref=e58]
+            - generic [ref=e62]: API監視
+      - generic [ref=e63]: マザーAI v1.0
+  - main [ref=e64]:
+    - generic [ref=e66]:
+      - heading "申請審査" [level=1] [ref=e67]
+      - table [ref=e71]:
+        - rowgroup [ref=e72]:
+          - row "申請日時 氏名 メール 利用目的 ステータス 操作" [ref=e73]:
+            - columnheader "申請日時" [ref=e74]
+            - columnheader "氏名" [ref=e75]
+            - columnheader "メール" [ref=e76]
+            - columnheader "利用目的" [ref=e77]
+            - columnheader "ステータス" [ref=e78]
+            - columnheader "操作" [ref=e79]
+        - rowgroup [ref=e80]:
+          - row "2025-11-06T10:41:31.903860 承認待ちテストユーザー3 pending3@example.com E2Eテスト用 - 一覧表示テスト 審査中 承認 却下" [ref=e81]:
+            - cell "2025-11-06T10:41:31.903860" [ref=e82]
+            - cell "承認待ちテストユーザー3" [ref=e83]
+            - cell "pending3@example.com" [ref=e84]
+            - cell "E2Eテスト用 - 一覧表示テスト" [ref=e85]
+            - cell "審査中" [ref=e86]:
+              - generic [ref=e88]: 審査中
+            - cell "承認 却下" [ref=e89]:
+              - button "承認" [ref=e90] [cursor=pointer]:
+                - img [ref=e92]
+                - text: 承認
+              - button "却下" [ref=e94] [cursor=pointer]:
+                - img [ref=e96]
+                - text: 却下
+          - row "2025-11-06T11:05:12.644424 E2Eテストユーザー test-apply-1762427111967@example.com E2Eテストのための申請です。このアカウントは自動テストで作成されました。 審査中 承認 却下" [ref=e98]:
+            - cell "2025-11-06T11:05:12.644424" [ref=e99]
+            - cell "E2Eテストユーザー" [ref=e100]
+            - cell "test-apply-1762427111967@example.com" [ref=e101]
+            - cell "E2Eテストのための申請です。このアカウントは自動テストで作成されました。" [ref=e102]
+            - cell "審査中" [ref=e103]:
+              - generic [ref=e105]: 審査中
+            - cell "承認 却下" [ref=e106]:
+              - button "承認" [ref=e107] [cursor=pointer]:
+                - img [ref=e109]
+                - text: 承認
+              - button "却下" [ref=e111] [cursor=pointer]:
+                - img [ref=e113]
+                - text: 却下
+          - row "2025-11-06T15:32:07.303245 E2Eテストユーザー test-apply-1762443126642@example.com E2Eテストのための申請です。このアカウントは自動テストで作成されました。 審査中 承認 却下" [ref=e115]:
+            - cell "2025-11-06T15:32:07.303245" [ref=e116]
+            - cell "E2Eテストユーザー" [ref=e117]
+            - cell "test-apply-1762443126642@example.com" [ref=e118]
+            - cell "E2Eテストのための申請です。このアカウントは自動テストで作成されました。" [ref=e119]
+            - cell "審査中" [ref=e120]:
+              - generic [ref=e122]: 審査中
+            - cell "承認 却下" [ref=e123]:
+              - button "承認" [ref=e124] [cursor=pointer]:
+                - img [ref=e126]
+                - text: 承認
+              - button "却下" [ref=e128] [cursor=pointer]:
+                - img [ref=e130]
+                - text: 却下
+          - row "2025-11-06T11:10:11.039790 E2Eテストユーザー test-apply-1762427410371@example.com E2Eテストのための申請です。このアカウントは自動テストで作成されました。 審査中 承認 却下" [ref=e132]:
+            - cell "2025-11-06T11:10:11.039790" [ref=e133]
+            - cell "E2Eテストユーザー" [ref=e134]
+            - cell "test-apply-1762427410371@example.com" [ref=e135]
+            - cell "E2Eテストのための申請です。このアカウントは自動テストで作成されました。" [ref=e136]
+            - cell "審査中" [ref=e137]:
+              - generic [ref=e139]: 審査中
+            - cell "承認 却下" [ref=e140]:
+              - button "承認" [ref=e141] [cursor=pointer]:
+                - img [ref=e143]
+                - text: 承認
+              - button "却下" [ref=e145] [cursor=pointer]:
+                - img [ref=e147]
+                - text: 却下
+          - row "2025-11-06T10:59:31.089532 E2Eテストユーザー test-apply-1762426770225@example.com E2Eテストのための申請です。このアカウントは自動テストで作成されました。 審査中 承認 却下" [ref=e149]:
+            - cell "2025-11-06T10:59:31.089532" [ref=e150]
+            - cell "E2Eテストユーザー" [ref=e151]
+            - cell "test-apply-1762426770225@example.com" [ref=e152]
+            - cell "E2Eテストのための申請です。このアカウントは自動テストで作成されました。" [ref=e153]
+            - cell "審査中" [ref=e154]:
+              - generic [ref=e156]: 審査中
+            - cell "承認 却下" [ref=e157]:
+              - button "承認" [ref=e158] [cursor=pointer]:
+                - img [ref=e160]
+                - text: 承認
+              - button "却下" [ref=e162] [cursor=pointer]:
+                - img [ref=e164]
+                - text: 却下
+          - row "2025-11-06T11:04:01.652617 E2Eテストユーザー test-apply-1762427040950@example.com E2Eテストのための申請です。このアカウントは自動テストで作成されました。 審査中 承認 却下" [ref=e166]:
+            - cell "2025-11-06T11:04:01.652617" [ref=e167]
+            - cell "E2Eテストユーザー" [ref=e168]
+            - cell "test-apply-1762427040950@example.com" [ref=e169]
+            - cell "E2Eテストのための申請です。このアカウントは自動テストで作成されました。" [ref=e170]
+            - cell "審査中" [ref=e171]:
+              - generic [ref=e173]: 審査中
+            - cell "承認 却下" [ref=e174]:
+              - button "承認" [ref=e175] [cursor=pointer]:
+                - img [ref=e177]
+                - text: 承認
+              - button "却下" [ref=e179] [cursor=pointer]:
+                - img [ref=e181]
+                - text: 却下
+          - row "2025-11-06T11:59:44.818252 E2Eテストユーザー test-apply-1762430384149@example.com E2Eテストのための申請です。このアカウントは自動テストで作成されました。 審査中 承認 却下" [ref=e183]:
+            - cell "2025-11-06T11:59:44.818252" [ref=e184]
+            - cell "E2Eテストユーザー" [ref=e185]
+            - cell "test-apply-1762430384149@example.com" [ref=e186]
+            - cell "E2Eテストのための申請です。このアカウントは自動テストで作成されました。" [ref=e187]
+            - cell "審査中" [ref=e188]:
+              - generic [ref=e190]: 審査中
+            - cell "承認 却下" [ref=e191]:
+              - button "承認" [ref=e192] [cursor=pointer]:
+                - img [ref=e194]
+                - text: 承認
+              - button "却下" [ref=e196] [cursor=pointer]:
+                - img [ref=e198]
+                - text: 却下
+```

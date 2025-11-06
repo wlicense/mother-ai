@@ -22,7 +22,7 @@ import CodeIcon from '@mui/icons-material/Code'
 import DescriptionIcon from '@mui/icons-material/Description'
 import RocketLaunchIcon from '@mui/icons-material/RocketLaunch'
 import AutoFixHighIcon from '@mui/icons-material/AutoFixHigh'
-import { useProject, useSendMessage } from '../../hooks/useProjects'
+import { useProject, useSendMessage, useProjectFile, useSaveFile } from '../../hooks/useProjects'
 import CodeEditor from '../../components/CodeEditor'
 import FileTree, { FileNode } from '../../components/FileTree'
 
@@ -116,6 +116,8 @@ export default function ProjectDetailPage() {
 
   const { data: project, isLoading, error } = useProject(id!)
   const { sendMessage } = useSendMessage()
+  const { data: fileData } = useProjectFile(id!, selectedFile?.path || null)
+  const { mutate: saveFile } = useSaveFile()
 
   // メッセージリストの最下部にスクロール
   const scrollToBottom = () => {
@@ -172,24 +174,47 @@ export default function ProjectDetailPage() {
 
   const handleFileSelect = (file: FileNode) => {
     setSelectedFile(file)
-    // モックコンテンツ（実際はバックエンドから取得）
-    const mockContent = `// ${file.path}
-// モックコンテンツ - Phase 2でAIが生成したコード
-
-export function example() {
-  console.log('This is a mock file')
-  return 'Hello, World!'
-}
-`
-    setFileContent(mockContent)
   }
+
+  // ファイルデータが読み込まれたらコンテンツを設定
+  useEffect(() => {
+    if (fileData && fileData.content) {
+      setFileContent(fileData.content)
+    } else if (selectedFile) {
+      // ファイルが存在しない場合は初期コンテンツを設定
+      const initialContent = `// ${selectedFile.path}
+// 新規ファイル
+
+`
+      setFileContent(initialContent)
+    }
+  }, [fileData, selectedFile])
 
   const handleCodeChange = (value: string | undefined) => {
     if (value !== undefined) {
       setFileContent(value)
-      // TODO: 実装時にバックエンドへ保存
-      console.log('コード変更:', value)
     }
+  }
+
+  const handleSaveFile = () => {
+    if (!id || !selectedFile) return
+
+    saveFile(
+      {
+        projectId: id,
+        filePath: selectedFile.path,
+        content: fileContent,
+        language: selectedFile.language,
+      },
+      {
+        onSuccess: () => {
+          console.log('ファイルを保存しました:', selectedFile.path)
+        },
+        onError: (error) => {
+          console.error('ファイル保存エラー:', error)
+        },
+      }
+    )
   }
 
   const getPhaseStatus = (phaseId: number): string => {
@@ -328,6 +353,7 @@ export function example() {
                   <CodeEditor
                     value={fileContent}
                     onChange={handleCodeChange}
+                    onSave={handleSaveFile}
                     language={selectedFile.language}
                     height={550}
                   />

@@ -37,7 +37,7 @@ async def get_pending_applications(
             "email": u.email,
             "purpose": u.application_purpose,
             "status": u.status.value,
-            "applied_at": u.created_at.isoformat(),
+            "appliedAt": u.created_at.isoformat(),
         }
         for u in pending_users
     ]
@@ -118,7 +118,7 @@ async def get_all_users(
             "email": u.email,
             "role": u.role.value,
             "status": u.status.value,
-            "project_count": len(u.projects),
+            "projectCount": len(u.projects),
             "last_login": u.last_login_at.isoformat() if u.last_login_at else None,
             "created_at": u.created_at.isoformat(),
         }
@@ -174,34 +174,49 @@ async def get_api_stats(
     """
     API使用統計を取得
     """
+    from datetime import datetime, timezone
+
     # 総統計
-    total_calls = db.query(func.count(ApiLog.id)).scalar() or 0
+    total_requests = db.query(func.count(ApiLog.id)).scalar() or 0
     total_cost = db.query(func.sum(ApiLog.cost)).scalar() or 0
     total_tokens = db.query(func.sum(ApiLog.total_tokens)).scalar() or 0
 
-    # 今日の統計（簡易版 - 実際はdateフィルタが必要）
-    today_calls = total_calls  # Placeholder
-    today_cost = total_cost  # Placeholder
+    # 今日の統計（UTC基準）
+    today_start = datetime.now(timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0)
+    today_requests = db.query(func.count(ApiLog.id)).filter(
+        ApiLog.created_at >= today_start
+    ).scalar() or 0
+    today_cost = db.query(func.sum(ApiLog.cost)).filter(
+        ApiLog.created_at >= today_start
+    ).scalar() or 0
 
-    # 最近のAPI呼び出し
-    recent_logs = db.query(ApiLog).order_by(ApiLog.created_at.desc()).limit(10).all()
+    # トップユーザー（APIコール数でトップ10）
+    top_users_query = db.query(
+        ApiLog.user_id,
+        User.name.label('user_name'),
+        func.count(ApiLog.id).label('total_requests'),
+        func.sum(ApiLog.cost).label('total_cost')
+    ).join(User, ApiLog.user_id == User.id)\
+     .group_by(ApiLog.user_id, User.name)\
+     .order_by(func.count(ApiLog.id).desc())\
+     .limit(10)\
+     .all()
+
+    top_users = [
+        {
+            "user_id": row.user_id,
+            "user_name": row.user_name,
+            "total_requests": row.total_requests,
+            "total_cost": float(row.total_cost) if row.total_cost else 0.0,
+        }
+        for row in top_users_query
+    ]
 
     return {
-        "total_calls": total_calls,
-        "total_cost": total_cost,
-        "total_tokens": total_tokens,
-        "today_calls": today_calls,
-        "today_cost": today_cost,
-        "recent_calls": [
-            {
-                "id": log.id,
-                "user_id": log.user_id,
-                "project_id": log.project_id,
-                "model": log.model,
-                "tokens": log.total_tokens,
-                "cost": log.cost,
-                "created_at": log.created_at.isoformat(),
-            }
-            for log in recent_logs
-        ],
+        "total_requests": total_requests,
+        "total_cost": float(total_cost) if total_cost else 0.0,
+        "total_tokens": int(total_tokens) if total_tokens else 0,
+        "today_requests": today_requests,
+        "today_cost": float(today_cost) if today_cost else 0.0,
+        "top_users": top_users,
     }

@@ -98,3 +98,51 @@ export const useSendMessage = () => {
     },
   };
 };
+
+/**
+ * プロジェクトのファイル一覧を取得するフック
+ */
+export const useProjectFiles = (projectId: string) => {
+  return useQuery({
+    queryKey: ['projectFiles', projectId],
+    queryFn: () => projectService.getProjectFiles(projectId),
+    enabled: !!projectId,
+    staleTime: 1000 * 60 * 5, // 5分間キャッシュ
+  });
+};
+
+/**
+ * 特定のファイルを取得するフック
+ */
+export const useProjectFile = (projectId: string, filePath: string | null) => {
+  return useQuery({
+    queryKey: ['projectFile', projectId, filePath],
+    queryFn: () => projectService.getProjectFile(projectId, filePath!),
+    enabled: !!projectId && !!filePath,
+    staleTime: 1000 * 60 * 5, // 5分間キャッシュ
+  });
+};
+
+/**
+ * ファイル保存フック
+ */
+export const useSaveFile = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ projectId, filePath, content, language }: {
+      projectId: string;
+      filePath: string;
+      content: string;
+      language?: string;
+    }) => projectService.saveProjectFile(projectId, filePath, content, language),
+    onSuccess: (_, variables) => {
+      // ファイル一覧とファイル詳細のキャッシュを無効化
+      queryClient.invalidateQueries({ queryKey: ['projectFiles', variables.projectId] });
+      queryClient.invalidateQueries({ queryKey: ['projectFile', variables.projectId, variables.filePath] });
+    },
+    onError: (error: any) => {
+      console.error('ファイル保存エラー:', error);
+    },
+  });
+};

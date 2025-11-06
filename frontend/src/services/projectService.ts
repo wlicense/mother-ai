@@ -151,10 +151,48 @@ export const sendMessageStream = async (
   }
 };
 
+/**
+ * プロジェクトのファイル一覧を取得
+ */
+export const getProjectFiles = async (projectId: string): Promise<any> => {
+  const response = await apiClient.get(`${BASE_PATH}/${projectId}/files`);
+  return response.data;
+};
+
+/**
+ * プロジェクトの特定のファイルを取得
+ */
+export const getProjectFile = async (projectId: string, filePath: string): Promise<any> => {
+  const response = await apiClient.get(`${BASE_PATH}/${projectId}/files`, {
+    params: { file_path: filePath },
+  });
+  return response.data;
+};
+
+/**
+ * プロジェクトのファイルを保存
+ */
+export const saveProjectFile = async (
+  projectId: string,
+  filePath: string,
+  content: string,
+  language?: string
+): Promise<any> => {
+  const response = await apiClient.post(`${BASE_PATH}/${projectId}/files`, {
+    file_path: filePath,
+    content,
+    language,
+  });
+  return response.data;
+};
+
 export default {
   getProjects,
   createProject,
   getProject,
   deleteProject,
   sendMessageStream,
+  getProjectFiles,
+  getProjectFile,
+  saveProjectFile,
 };

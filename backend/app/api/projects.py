@@ -4,9 +4,10 @@ from sqlalchemy.orm import Session
 from pydantic import BaseModel
 from typing import List
 import json
+from datetime import datetime
 from app.core.database import get_db
 from app.core.deps import get_current_approved_user
-from app.models.models import User, Project, ProjectStatus, Message
+from app.models.models import User, Project, ProjectStatus, Message, ProjectFile
 from app.services.claude_service import get_claude_service
 
 router = APIRouter()
@@ -251,3 +252,133 @@ async def delete_project(
     db.commit()
 
     return {"message": "プロジェクトを削除しました"}
+
+
+# === File Management Endpoints ===
+
+
+class SaveFileRequest(BaseModel):
+    file_path: str
+    content: str
+    language: str = None
+
+
+@router.post("/{project_id}/files")
+async def save_file(
+    project_id: str,
+    request: SaveFileRequest,
+    current_user: User = Depends(get_current_approved_user),
+    db: Session = Depends(get_db)
+):
+    """
+    プロジェクトのファイルを保存（新規作成または更新）
+    """
+    # プロジェクトの所有権確認
+    project = db.query(Project).filter(
+        Project.id == project_id,
+        Project.owner_id == current_user.id
+    ).first()
+
+    if not project:
+        raise HTTPException(status_code=404, detail="プロジェクトが見つかりません")
+
+    # 既存ファイルを検索
+    existing_file = db.query(ProjectFile).filter(
+        ProjectFile.project_id == project_id,
+        ProjectFile.file_path == request.file_path
+    ).first()
+
+    if existing_file:
+        # 更新
+        existing_file.content = request.content
+        if request.language:
+            existing_file.language = request.language
+        existing_file.updated_at = datetime.utcnow()
+        db.commit()
+        db.refresh(existing_file)
+
+        return {
+            "message": "ファイルを更新しました",
+            "file": {
+                "id": existing_file.id,
+                "file_path": existing_file.file_path,
+                "language": existing_file.language,
+                "updated_at": existing_file.updated_at.isoformat(),
+            }
+        }
+    else:
+        # 新規作成
+        new_file = ProjectFile(
+            project_id=project_id,
+            file_path=request.file_path,
+            content=request.content,
+            language=request.language,
+        )
+        db.add(new_file)
+        db.commit()
+        db.refresh(new_file)
+
+        return {
+            "message": "ファイルを作成しました",
+            "file": {
+                "id": new_file.id,
+                "file_path": new_file.file_path,
+                "language": new_file.language,
+                "created_at": new_file.created_at.isoformat(),
+            }
+        }
+
+
+@router.get("/{project_id}/files")
+async def get_files(
+    project_id: str,
+    file_path: str = None,
+    current_user: User = Depends(get_current_approved_user),
+    db: Session = Depends(get_db)
+):
+    """
+    プロジェクトのファイル一覧を取得、またはfile_pathが指定された場合は特定のファイルを取得
+    """
+    # プロジェクトの所有権確認
+    project = db.query(Project).filter(
+        Project.id == project_id,
+        Project.owner_id == current_user.id
+    ).first()
+
+    if not project:
+        raise HTTPException(status_code=404, detail="プロジェクトが見つかりません")
+
+    # 特定のファイルを取得
+    if file_path:
+        file = db.query(ProjectFile).filter(
+            ProjectFile.project_id == project_id,
+            ProjectFile.file_path == file_path
+        ).first()
+
+        if not file:
+            raise HTTPException(status_code=404, detail="ファイルが見つかりません")
+
+        return {
+            "id": file.id,
+            "file_path": file.file_path,
+            "content": file.content,
+            "language": file.language,
+            "created_at": file.created_at.isoformat(),
+            "updated_at": file.updated_at.isoformat(),
+        }
+
+    # ファイル一覧を取得
+    files = db.query(ProjectFile).filter(ProjectFile.project_id == project_id).all()
+
+    return {
+        "files": [
+            {
+                "id": f.id,
+                "file_path": f.file_path,
+                "language": f.language,
+                "created_at": f.created_at.isoformat(),
+                "updated_at": f.updated_at.isoformat(),
+            }
+            for f in files
+        ]
+    }

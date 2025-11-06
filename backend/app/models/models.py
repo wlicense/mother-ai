@@ -97,6 +97,7 @@ class Project(Base):
     owner = relationship("User", back_populates="projects")
     messages = relationship("Message", back_populates="project", cascade="all, delete-orphan")
     phase_executions = relationship("PhaseExecution", back_populates="project", cascade="all, delete-orphan")
+    files = relationship("ProjectFile", back_populates="project", cascade="all, delete-orphan")
 
 
 class Message(Base):
@@ -177,6 +178,27 @@ class ApiLog(Base):
 
     # Relationships
     user = relationship("User", back_populates="api_logs")
+
+
+class ProjectFile(Base):
+    """
+    プロジェクトのコードファイル
+    Phase 2で生成されたコードやユーザーが編集したコードを保存
+    """
+    __tablename__ = "project_files"
+
+    id = Column(String, primary_key=True, default=generate_uuid)
+    project_id = Column(String, ForeignKey("projects.id"), nullable=False)
+    file_path = Column(String, nullable=False)  # e.g., "src/App.tsx"
+    content = Column(Text, nullable=False)
+    language = Column(String, nullable=True)  # e.g., "typescript", "python"
+
+    # Timestamps
+    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    # Relationships
+    project = relationship("Project", back_populates="files")
 
 
 class SystemExpansion(Base):

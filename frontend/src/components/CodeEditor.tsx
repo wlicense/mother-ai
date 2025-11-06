@@ -6,6 +6,7 @@ import * as monaco from 'monaco-editor'
 interface CodeEditorProps {
   value: string
   onChange?: (value: string | undefined) => void
+  onSave?: () => void
   language?: string
   readOnly?: boolean
   height?: string | number
@@ -15,6 +16,7 @@ interface CodeEditorProps {
 export default function CodeEditor({
   value,
   onChange,
+  onSave,
   language = 'typescript',
   readOnly = false,
   height = '600px',
@@ -27,8 +29,10 @@ export default function CodeEditor({
 
     // エディタのキーバインディング設定
     editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyS, () => {
-      // Ctrl+S / Cmd+S で保存（将来実装）
-      console.log('保存コマンド')
+      // Ctrl+S / Cmd+S で保存
+      if (onSave) {
+        onSave()
+      }
     })
   }
 
