@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 from app.core.config import settings
-from app.api import auth, projects, admin, agents
+from app.api import auth, projects, admin, agents, users
 from app.agents import initialize_agents
 
 
@@ -34,10 +34,11 @@ app.add_middleware(
 )
 
 # ルーター登録
-app.include_router(auth.router, prefix="/api/auth", tags=["認証"])
-app.include_router(projects.router, prefix="/api/projects", tags=["プロジェクト"])
-app.include_router(admin.router, prefix="/api/admin", tags=["管理"])
-app.include_router(agents.router, prefix="/api/agents", tags=["エージェント"])
+app.include_router(auth.router, prefix="/api/v1/auth", tags=["認証"])
+app.include_router(users.router, prefix="/api/v1/users", tags=["ユーザー"])
+app.include_router(projects.router, prefix="/api/v1/projects", tags=["プロジェクト"])
+app.include_router(admin.router, prefix="/api/v1/admin", tags=["管理"])
+app.include_router(agents.router, prefix="/api/v1/agents", tags=["エージェント"])
 
 
 @app.get("/")

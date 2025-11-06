@@ -61,10 +61,10 @@ async def login(request: LoginRequest, db: Session = Depends(get_db)):
     }
 
 
-@router.post("/apply")
-async def apply(request: ApplyRequest, db: Session = Depends(get_db)):
+@router.post("/register")
+async def register(request: ApplyRequest, db: Session = Depends(get_db)):
     """
-    利用申請
+    新規ユーザー申請
     """
     # メールアドレスの重複チェック
     existing_user = db.query(User).filter(User.email == request.email).first()
