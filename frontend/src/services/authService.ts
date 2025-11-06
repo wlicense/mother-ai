@@ -13,7 +13,7 @@ import { User } from '../types';
  * ログイン
  */
 export const login = async (email: string, password: string): Promise<LoginResponse> => {
-  const response = await apiClient.post<LoginResponse>('/login', {
+  const response = await apiClient.post<LoginResponse>('/api/v1/auth/login', {
     email,
     password,
   } as LoginRequest);
@@ -30,7 +30,7 @@ export const login = async (email: string, password: string): Promise<LoginRespo
  * ユーザー登録（申請）
  */
 export const register = async (data: RegisterRequest): Promise<RegisterResponse> => {
-  const response = await apiClient.post<RegisterResponse>('/register', data);
+  const response = await apiClient.post<RegisterResponse>('/api/v1/auth/register', data);
   return response.data;
 };
 
@@ -90,7 +90,7 @@ export const isAdmin = (): boolean => {
 export const loginWithGoogle = (): void => {
   // バックエンドのGoogle OAuth URLにリダイレクト
   const backendUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8572';
-  window.location.href = `${backendUrl}/oauth/google`;
+  window.location.href = `${backendUrl}/api/v1/auth/oauth/google`;
 };
 
 /**
@@ -99,7 +99,7 @@ export const loginWithGoogle = (): void => {
 export const loginWithGitHub = (): void => {
   // バックエンドのGitHub OAuth URLにリダイレクト
   const backendUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8572';
-  window.location.href = `${backendUrl}/oauth/github`;
+  window.location.href = `${backendUrl}/api/v1/auth/oauth/github`;
 };
 
 /**
@@ -120,7 +120,7 @@ export const updateProfile = async (data: {
   name?: string;
   custom_claude_api_key?: string;
 }): Promise<User> => {
-  const response = await apiClient.put<User>('/users/me', data);
+  const response = await apiClient.put<User>('/api/v1/users/me', data);
 
   // ローカルストレージのユーザー情報も更新
   const currentUser = getCurrentUser();

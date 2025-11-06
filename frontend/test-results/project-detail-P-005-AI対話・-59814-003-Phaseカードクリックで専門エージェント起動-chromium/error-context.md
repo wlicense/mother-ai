@@ -1,0 +1,233 @@
+# Page snapshot
+
+```yaml
+- generic [ref=e4]:
+  - banner [ref=e5]:
+    - generic [ref=e6]:
+      - generic [ref=e7]: 🌱 マザーAI
+      - generic [ref=e8]:
+        - paragraph [ref=e10]: テストユーザー_1762402135582
+        - button [ref=e11] [cursor=pointer]:
+          - img [ref=e13]
+  - navigation [ref=e15]:
+    - generic [ref=e17]:
+      - generic [ref=e19]: メニュー
+      - list [ref=e20]:
+        - listitem [ref=e21]:
+          - button "プロジェクト" [ref=e22] [cursor=pointer]:
+            - img [ref=e24]
+            - generic [ref=e27]: プロジェクト
+        - listitem [ref=e28]:
+          - button "プロフィール" [ref=e29] [cursor=pointer]:
+            - img [ref=e31]
+            - generic [ref=e34]: プロフィール
+      - generic [ref=e35]: マザーAI v1.0
+  - main [ref=e36]:
+    - generic [ref=e38]:
+      - generic [ref=e39]:
+        - heading "プロジェクト一覧" [level=1] [ref=e40]
+        - button "新規プロジェクト" [active] [ref=e41] [cursor=pointer]:
+          - img [ref=e43]
+          - text: 新規プロジェクト
+      - generic [ref=e45]:
+        - generic [ref=e47]:
+          - generic [ref=e48]:
+            - generic [ref=e49]:
+              - img [ref=e50]
+              - heading "E2Eテストプロジェクト" [level=2] [ref=e52]
+            - paragraph
+            - generic [ref=e53]:
+              - generic [ref=e55]: 不明
+              - generic [ref=e57]: Phase 1
+          - button "詳細を見る" [ref=e59] [cursor=pointer]
+        - generic [ref=e61]:
+          - generic [ref=e62]:
+            - generic [ref=e63]:
+              - img [ref=e64]
+              - heading "E2Eテストプロジェクト" [level=2] [ref=e66]
+            - paragraph
+            - generic [ref=e67]:
+              - generic [ref=e69]: 不明
+              - generic [ref=e71]: Phase 1
+          - button "詳細を見る" [ref=e73] [cursor=pointer]
+        - generic [ref=e75]:
+          - generic [ref=e76]:
+            - generic [ref=e77]:
+              - img [ref=e78]
+              - heading "E2Eテストプロジェクト" [level=2] [ref=e80]
+            - paragraph
+            - generic [ref=e81]:
+              - generic [ref=e83]: 不明
+              - generic [ref=e85]: Phase 1
+          - button "詳細を見る" [ref=e87] [cursor=pointer]
+        - generic [ref=e89]:
+          - generic [ref=e90]:
+            - generic [ref=e91]:
+              - img [ref=e92]
+              - heading "E2Eテストプロジェクト" [level=2] [ref=e94]
+            - paragraph
+            - generic [ref=e95]:
+              - generic [ref=e97]: 不明
+              - generic [ref=e99]: Phase 1
+          - button "詳細を見る" [ref=e101] [cursor=pointer]
+        - generic [ref=e103]:
+          - generic [ref=e104]:
+            - generic [ref=e105]:
+              - img [ref=e106]
+              - heading "E2Eテストプロジェクト" [level=2] [ref=e108]
+            - paragraph
+            - generic [ref=e109]:
+              - generic [ref=e111]: 不明
+              - generic [ref=e113]: Phase 1
+          - button "詳細を見る" [ref=e115] [cursor=pointer]
+        - generic [ref=e117]:
+          - generic [ref=e118]:
+            - generic [ref=e119]:
+              - img [ref=e120]
+              - heading "E2Eテストプロジェクト" [level=2] [ref=e122]
+            - paragraph
+            - generic [ref=e123]:
+              - generic [ref=e125]: 不明
+              - generic [ref=e127]: Phase 1
+          - button "詳細を見る" [ref=e129] [cursor=pointer]
+        - generic [ref=e131]:
+          - generic [ref=e132]:
+            - generic [ref=e133]:
+              - img [ref=e134]
+              - heading "E2Eテストプロジェクト" [level=2] [ref=e136]
+            - paragraph
+            - generic [ref=e137]:
+              - generic [ref=e139]: 不明
+              - generic [ref=e141]: Phase 1
+          - button "詳細を見る" [ref=e143] [cursor=pointer]
+        - generic [ref=e145]:
+          - generic [ref=e146]:
+            - generic [ref=e147]:
+              - img [ref=e148]
+              - heading "E2Eテストプロジェクト" [level=2] [ref=e150]
+            - paragraph
+            - generic [ref=e151]:
+              - generic [ref=e153]: 不明
+              - generic [ref=e155]: Phase 1
+          - button "詳細を見る" [ref=e157] [cursor=pointer]
+        - generic [ref=e159]:
+          - generic [ref=e160]:
+            - generic [ref=e161]:
+              - img [ref=e162]
+              - heading "E2E Phase Test Project" [level=2] [ref=e164]
+            - paragraph
+            - generic [ref=e165]:
+              - generic [ref=e167]: 不明
+              - generic [ref=e169]: Phase 1
+          - button "詳細を見る" [ref=e171] [cursor=pointer]
+        - generic [ref=e173]:
+          - generic [ref=e174]:
+            - generic [ref=e175]:
+              - img [ref=e176]
+              - heading "E2E Phase Click Test" [level=2] [ref=e178]
+            - paragraph
+            - generic [ref=e179]:
+              - generic [ref=e181]: 不明
+              - generic [ref=e183]: Phase 1
+          - button "詳細を見る" [ref=e185] [cursor=pointer]
+        - generic [ref=e187]:
+          - generic [ref=e188]:
+            - generic [ref=e189]:
+              - img [ref=e190]
+              - heading "E2Eテストプロジェクト" [level=2] [ref=e192]
+            - paragraph
+            - generic [ref=e193]:
+              - generic [ref=e195]: 不明
+              - generic [ref=e197]: Phase 1
+          - button "詳細を見る" [ref=e199] [cursor=pointer]
+        - generic [ref=e201]:
+          - generic [ref=e202]:
+            - generic [ref=e203]:
+              - img [ref=e204]
+              - heading "E2E Phase Test Project" [level=2] [ref=e206]
+            - paragraph
+            - generic [ref=e207]:
+              - generic [ref=e209]: 不明
+              - generic [ref=e211]: Phase 1
+          - button "詳細を見る" [ref=e213] [cursor=pointer]
+        - generic [ref=e215]:
+          - generic [ref=e216]:
+            - generic [ref=e217]:
+              - img [ref=e218]
+              - heading "E2E Phase Click Test" [level=2] [ref=e220]
+            - paragraph
+            - generic [ref=e221]:
+              - generic [ref=e223]: 不明
+              - generic [ref=e225]: Phase 1
+          - button "詳細を見る" [ref=e227] [cursor=pointer]
+        - generic [ref=e229]:
+          - generic [ref=e230]:
+            - generic [ref=e231]:
+              - img [ref=e232]
+              - heading "E2E Phase Click Test" [level=2] [ref=e234]
+            - paragraph
+            - generic [ref=e235]:
+              - generic [ref=e237]: 不明
+              - generic [ref=e239]: Phase 1
+          - button "詳細を見る" [ref=e241] [cursor=pointer]
+        - generic [ref=e243]:
+          - generic [ref=e244]:
+            - generic [ref=e245]:
+              - img [ref=e246]
+              - heading "E2Eテストプロジェクト" [level=2] [ref=e248]
+            - paragraph
+            - generic [ref=e249]:
+              - generic [ref=e251]: 不明
+              - generic [ref=e253]: Phase 1
+          - button "詳細を見る" [ref=e255] [cursor=pointer]
+        - generic [ref=e257]:
+          - generic [ref=e258]:
+            - generic [ref=e259]:
+              - img [ref=e260]
+              - heading "E2E Phase Click Test" [level=2] [ref=e262]
+            - paragraph
+            - generic [ref=e263]:
+              - generic [ref=e265]: 不明
+              - generic [ref=e267]: Phase 1
+          - button "詳細を見る" [ref=e269] [cursor=pointer]
+        - generic [ref=e271]:
+          - generic [ref=e272]:
+            - generic [ref=e273]:
+              - img [ref=e274]
+              - heading "E2Eテストプロジェクト" [level=2] [ref=e276]
+            - paragraph
+            - generic [ref=e277]:
+              - generic [ref=e279]: 不明
+              - generic [ref=e281]: Phase 1
+          - button "詳細を見る" [ref=e283] [cursor=pointer]
+        - generic [ref=e285]:
+          - generic [ref=e286]:
+            - generic [ref=e287]:
+              - img [ref=e288]
+              - heading "E2E Phase Click Test" [level=2] [ref=e290]
+            - paragraph
+            - generic [ref=e291]:
+              - generic [ref=e293]: 不明
+              - generic [ref=e295]: Phase 1
+          - button "詳細を見る" [ref=e297] [cursor=pointer]
+        - generic [ref=e299]:
+          - generic [ref=e300]:
+            - generic [ref=e301]:
+              - img [ref=e302]
+              - heading "E2Eテストプロジェクト" [level=2] [ref=e304]
+            - paragraph
+            - generic [ref=e305]:
+              - generic [ref=e307]: 不明
+              - generic [ref=e309]: Phase 1
+          - button "詳細を見る" [ref=e311] [cursor=pointer]
+        - generic [ref=e313]:
+          - generic [ref=e314]:
+            - generic [ref=e315]:
+              - img [ref=e316]
+              - heading "E2E Phase Click Test" [level=2] [ref=e318]
+            - paragraph
+            - generic [ref=e319]:
+              - generic [ref=e321]: 不明
+              - generic [ref=e323]: Phase 1
+          - button "詳細を見る" [ref=e325] [cursor=pointer]
+```

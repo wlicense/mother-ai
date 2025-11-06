@@ -34,12 +34,13 @@ export default function LoginPage() {
       return
     }
 
-    try {
-      await loginMutation.mutateAsync({ email, password })
-    } catch (err: any) {
-      const errorMessage = err.response?.data?.detail || 'ログインに失敗しました'
-      setError(errorMessage)
-    }
+    loginMutation.mutate({ email, password }, {
+      onError: (err: any) => {
+        console.error('Login error:', err)
+        const errorMessage = err?.response?.data?.detail || err?.message || 'ログインに失敗しました'
+        setError(errorMessage)
+      }
+    })
   }
 
   const handleOAuthLogin = (provider: 'google' | 'github') => {

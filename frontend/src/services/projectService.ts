@@ -9,7 +9,7 @@ import {
   SSEEvent,
 } from '../types/api';
 
-const BASE_PATH = '/projects';
+const BASE_PATH = '/api/v1/projects';
 
 /**
  * プロジェクト一覧を取得

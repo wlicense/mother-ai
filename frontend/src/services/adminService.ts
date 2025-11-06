@@ -7,7 +7,7 @@ import {
 } from '../types/api';
 import { User } from '../types';
 
-const BASE_PATH = '/admin';
+const BASE_PATH = '/api/v1/admin';
 
 /**
  * 審査待ちの申請一覧を取得
