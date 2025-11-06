@@ -22,11 +22,12 @@ import UsersManagementPage from './pages/admin/UsersManagementPage'
 import ApiMonitorPage from './pages/admin/ApiMonitorPage'
 
 // Auth
-import { ProtectedRoute } from './features/auth/components/ProtectedRoute'
-import { useAuth } from './features/auth/hooks/useAuth'
+import ProtectedRoute from './components/ProtectedRoute'
+import { useCurrentUser, useIsAuthenticated } from './hooks/useAuth'
 
 function App() {
-  const { user, isAuthenticated } = useAuth()
+  const { data: user } = useCurrentUser()
+  const isAuthenticated = useIsAuthenticated()
 
   // ゲストルート保護（認証済みユーザーをリダイレクト）
   const GuestRoute = ({ children }: { children: React.ReactNode }) => {
@@ -113,7 +114,7 @@ function App() {
           <Route
             path="/admin/applications"
             element={
-              <ProtectedRoute requiredRole="admin">
+              <ProtectedRoute requireAdmin>
                 <ApplicationsPage />
               </ProtectedRoute>
             }
@@ -121,7 +122,7 @@ function App() {
           <Route
             path="/admin/users"
             element={
-              <ProtectedRoute requiredRole="admin">
+              <ProtectedRoute requireAdmin>
                 <UsersManagementPage />
               </ProtectedRoute>
             }
@@ -129,7 +130,7 @@ function App() {
           <Route
             path="/admin/api-monitor"
             element={
-              <ProtectedRoute requiredRole="admin">
+              <ProtectedRoute requireAdmin>
                 <ApiMonitorPage />
               </ProtectedRoute>
             }

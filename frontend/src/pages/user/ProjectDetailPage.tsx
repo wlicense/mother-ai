@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useParams } from 'react-router-dom'
 import {
   Box,
@@ -12,6 +12,8 @@ import {
   TextField,
   IconButton,
   Divider,
+  CircularProgress,
+  Alert,
 } from '@mui/material'
 import CheckCircleIcon from '@mui/icons-material/CheckCircle'
 import RadioButtonUncheckedIcon from '@mui/icons-material/RadioButtonUnchecked'
@@ -20,8 +22,9 @@ import CodeIcon from '@mui/icons-material/Code'
 import DescriptionIcon from '@mui/icons-material/Description'
 import RocketLaunchIcon from '@mui/icons-material/RocketLaunch'
 import AutoFixHighIcon from '@mui/icons-material/AutoFixHigh'
+import { useProject, useSendMessage } from '../../hooks/useProjects'
 
-// Placeholder phases
+// Phase定義
 const phases = [
   {
     id: 1,
@@ -29,7 +32,6 @@ const phases = [
     title: '要件定義',
     description: 'プロジェクトの要件を対話で明確化',
     icon: <DescriptionIcon />,
-    status: 'completed',
     color: '#1976d2',
   },
   {
@@ -38,7 +40,6 @@ const phases = [
     title: 'コード生成',
     description: 'AIがコードを自動生成',
     icon: <CodeIcon />,
-    status: 'in_progress',
     color: '#9c27b0',
   },
   {
@@ -47,7 +48,6 @@ const phases = [
     title: 'デプロイ',
     description: '本番環境へ自動デプロイ',
     icon: <RocketLaunchIcon />,
-    status: 'pending',
     color: '#2e7d32',
   },
   {
@@ -56,41 +56,80 @@ const phases = [
     title: '自己改善',
     description: 'フィードバックを元に改善',
     icon: <AutoFixHighIcon />,
-    status: 'pending',
     color: '#ed6c02',
   },
 ]
 
-// Placeholder messages
-const mockMessages = [
-  { id: 1, role: 'assistant', content: 'こんにちは！プロジェクトの要件を教えてください。' },
-  { id: 2, role: 'user', content: 'ECサイトを作りたいです' },
-  { id: 3, role: 'assistant', content: 'ECサイトですね。どのような商品を扱う予定ですか？' },
-]
-
 export default function ProjectDetailPage() {
   const { id } = useParams()
-  const [selectedPhase, setSelectedPhase] = useState(2)
+  const [selectedPhase, setSelectedPhase] = useState(1)
   const [message, setMessage] = useState('')
-  const [messages, setMessages] = useState(mockMessages)
+  const [streamingMessage, setStreamingMessage] = useState('')
+  const [isStreaming, setIsStreaming] = useState(false)
+  const messagesEndRef = useRef<HTMLDivElement>(null)
 
-  const handleSendMessage = () => {
-    if (!message.trim()) return
+  const { data: project, isLoading, error } = useProject(id!)
+  const { sendMessage } = useSendMessage()
 
-    setMessages([...messages, { id: messages.length + 1, role: 'user', content: message }])
+  // メッセージリストの最下部にスクロール
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+  }
+
+  useEffect(() => {
+    scrollToBottom()
+  }, [project?.messages, streamingMessage])
+
+  // プロジェクト読み込み時に現在のPhaseを設定
+  useEffect(() => {
+    if (project) {
+      setSelectedPhase(project.current_phase)
+    }
+  }, [project])
+
+  const handleSendMessage = async () => {
+    if (!message.trim() || !id || isStreaming) return
+
+    const userMessage = message
     setMessage('')
+    setIsStreaming(true)
+    setStreamingMessage('')
 
-    // Simulate AI response
-    setTimeout(() => {
-      setMessages((prev) => [
-        ...prev,
-        {
-          id: prev.length + 1,
-          role: 'assistant',
-          content: 'メッセージを受け取りました。処理中です...',
+    try {
+      await sendMessage(
+        id,
+        userMessage,
+        selectedPhase,
+        (token: string) => {
+          // トークン受信時
+          setStreamingMessage((prev) => prev + token)
         },
-      ])
-    }, 1000)
+        (messageId: string) => {
+          // ストリーム完了時
+          setIsStreaming(false)
+          setStreamingMessage('')
+          console.log('メッセージ完了:', messageId)
+        },
+        (error: string) => {
+          // エラー発生時
+          setIsStreaming(false)
+          setStreamingMessage('')
+          console.error('メッセージエラー:', error)
+        }
+      )
+    } catch (error) {
+      setIsStreaming(false)
+      setStreamingMessage('')
+      console.error('メッセージ送信エラー:', error)
+    }
+  }
+
+  const getPhaseStatus = (phaseId: number): string => {
+    if (!project) return 'pending'
+
+    if (phaseId < project.current_phase) return 'completed'
+    if (phaseId === project.current_phase) return 'in_progress'
+    return 'pending'
   }
 
   const getStatusIcon = (status: string) => {
@@ -115,10 +154,32 @@ export default function ProjectDetailPage() {
     }
   }
 
+  if (isLoading) {
+    return (
+      <Box sx={{ display: 'flex', justifyContent: 'center', py: 8 }}>
+        <CircularProgress />
+      </Box>
+    )
+  }
+
+  if (error || !project) {
+    return (
+      <Alert severity="error">
+        プロジェクトの読み込みに失敗しました
+      </Alert>
+    )
+  }
+
+  // 選択したPhaseのメッセージをフィルタ
+  const phaseMessages = project.messages?.filter((msg) => msg.phase === selectedPhase) || []
+
   return (
     <Box>
       <Typography variant="h4" component="h1" fontWeight="bold" gutterBottom>
-        プロジェクト #{id}
+        {project.name}
+      </Typography>
+      <Typography variant="body1" color="text.secondary" paragraph>
+        {project.description}
       </Typography>
 
       {/* Phase Cards */}
@@ -127,36 +188,39 @@ export default function ProjectDetailPage() {
           開発フェーズ
         </Typography>
         <Grid container spacing={2}>
-          {phases.map((phase) => (
-            <Grid item xs={12} sm={6} md={3} key={phase.id}>
-              <Card
-                sx={{
-                  border: selectedPhase === phase.id ? 2 : 0,
-                  borderColor: 'primary.main',
-                  bgcolor: selectedPhase === phase.id ? 'action.selected' : 'background.paper',
-                }}
-              >
-                <CardActionArea onClick={() => setSelectedPhase(phase.id)}>
-                  <CardContent>
-                    <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
-                      <Box sx={{ color: phase.color }}>{phase.icon}</Box>
-                      {getStatusIcon(phase.status)}
-                    </Box>
-                    <Typography variant="subtitle2" color="text.secondary" gutterBottom>
-                      {phase.name}
-                    </Typography>
-                    <Typography variant="h6" gutterBottom>
-                      {phase.title}
-                    </Typography>
-                    <Typography variant="body2" color="text.secondary" paragraph>
-                      {phase.description}
-                    </Typography>
-                    {getStatusChip(phase.status)}
-                  </CardContent>
-                </CardActionArea>
-              </Card>
-            </Grid>
-          ))}
+          {phases.map((phase) => {
+            const status = getPhaseStatus(phase.id)
+            return (
+              <Grid item xs={12} sm={6} md={3} key={phase.id}>
+                <Card
+                  sx={{
+                    border: selectedPhase === phase.id ? 2 : 0,
+                    borderColor: 'primary.main',
+                    bgcolor: selectedPhase === phase.id ? 'action.selected' : 'background.paper',
+                  }}
+                >
+                  <CardActionArea onClick={() => setSelectedPhase(phase.id)}>
+                    <CardContent>
+                      <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
+                        <Box sx={{ color: phase.color }}>{phase.icon}</Box>
+                        {getStatusIcon(status)}
+                      </Box>
+                      <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+                        {phase.name}
+                      </Typography>
+                      <Typography variant="h6" gutterBottom>
+                        {phase.title}
+                      </Typography>
+                      <Typography variant="body2" color="text.secondary" paragraph>
+                        {phase.description}
+                      </Typography>
+                      {getStatusChip(status)}
+                    </CardContent>
+                  </CardActionArea>
+                </Card>
+              </Grid>
+            )
+          })}
         </Grid>
       </Box>
 
@@ -178,7 +242,13 @@ export default function ProjectDetailPage() {
             borderRadius: 1,
           }}
         >
-          {messages.map((msg) => (
+          {phaseMessages.length === 0 && !streamingMessage && (
+            <Typography variant="body2" color="text.secondary" textAlign="center">
+              メッセージがありません。最初のメッセージを送信してください。
+            </Typography>
+          )}
+
+          {phaseMessages.map((msg) => (
             <Box
               key={msg.id}
               sx={{
@@ -195,10 +265,38 @@ export default function ProjectDetailPage() {
                   color: msg.role === 'user' ? 'white' : 'text.primary',
                 }}
               >
-                <Typography variant="body2">{msg.content}</Typography>
+                <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap' }}>
+                  {msg.content}
+                </Typography>
               </Paper>
             </Box>
           ))}
+
+          {/* ストリーミング中のメッセージ */}
+          {streamingMessage && (
+            <Box
+              sx={{
+                mb: 2,
+                display: 'flex',
+                justifyContent: 'flex-start',
+              }}
+            >
+              <Paper
+                sx={{
+                  p: 2,
+                  maxWidth: '70%',
+                  bgcolor: 'grey.100',
+                  color: 'text.primary',
+                }}
+              >
+                <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap' }}>
+                  {streamingMessage}
+                </Typography>
+              </Paper>
+            </Box>
+          )}
+
+          <div ref={messagesEndRef} />
         </Box>
 
         {/* Input */}
@@ -208,10 +306,15 @@ export default function ProjectDetailPage() {
             placeholder="メッセージを入力..."
             value={message}
             onChange={(e) => setMessage(e.target.value)}
-            onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
+            onKeyPress={(e) => e.key === 'Enter' && !e.shiftKey && handleSendMessage()}
+            disabled={isStreaming}
           />
-          <IconButton color="primary" onClick={handleSendMessage}>
-            <SendIcon />
+          <IconButton
+            color="primary"
+            onClick={handleSendMessage}
+            disabled={!message.trim() || isStreaming}
+          >
+            {isStreaming ? <CircularProgress size={24} /> : <SendIcon />}
           </IconButton>
         </Box>
       </Paper>

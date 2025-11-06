@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import {
   Box,
   Typography,
@@ -9,27 +9,51 @@ import {
   Grid,
   Divider,
   Alert,
+  CircularProgress,
 } from '@mui/material'
-import { useAuthStore } from '@/stores/authStore'
+import { useCurrentUser, useUpdateProfile } from '../../hooks/useAuth'
 
 export default function ProfilePage() {
-  const { user } = useAuthStore()
+  const { data: user, isLoading } = useCurrentUser()
+  const updateProfileMutation = useUpdateProfile()
   const [formData, setFormData] = useState({
-    name: user?.name || '',
-    email: user?.email || '',
+    name: '',
+    email: '',
     claudeApiKey: '',
   })
-  const [saved, setSaved] = useState(false)
+
+  // ユーザー情報が読み込まれたらフォームに設定
+  useEffect(() => {
+    if (user) {
+      setFormData({
+        name: user.name || '',
+        email: user.email || '',
+        claudeApiKey: '',
+      })
+    }
+  }, [user])
 
   const handleChange = (field: string) => (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({ ...formData, [field]: e.target.value })
   }
 
-  const handleSave = () => {
-    // TODO: Implement profile update API
-    console.log('Save profile:', formData)
-    setSaved(true)
-    setTimeout(() => setSaved(false), 3000)
+  const handleSave = async () => {
+    try {
+      await updateProfileMutation.mutateAsync({
+        name: formData.name,
+        custom_claude_api_key: formData.claudeApiKey || undefined,
+      })
+    } catch (error) {
+      console.error('プロフィール更新エラー:', error)
+    }
+  }
+
+  if (isLoading) {
+    return (
+      <Box sx={{ display: 'flex', justifyContent: 'center', py: 8 }}>
+        <CircularProgress />
+      </Box>
+    )
   }
 
   return (
@@ -47,9 +71,15 @@ export default function ProfilePage() {
               </Typography>
               <Divider sx={{ mb: 3 }} />
 
-              {saved && (
+              {updateProfileMutation.isSuccess && (
                 <Alert severity="success" sx={{ mb: 2 }}>
                   保存しました
+                </Alert>
+              )}
+
+              {updateProfileMutation.isError && (
+                <Alert severity="error" sx={{ mb: 2 }}>
+                  保存に失敗しました
                 </Alert>
               )}
 
@@ -69,8 +99,13 @@ export default function ProfilePage() {
                 helperText="メールアドレスは変更できません"
                 sx={{ mb: 3 }}
               />
-              <Button variant="contained" onClick={handleSave}>
-                保存
+              <Button
+                variant="contained"
+                onClick={handleSave}
+                disabled={updateProfileMutation.isPending}
+                startIcon={updateProfileMutation.isPending ? <CircularProgress size={20} /> : null}
+              >
+                {updateProfileMutation.isPending ? '保存中...' : '保存'}
               </Button>
             </CardContent>
           </Card>

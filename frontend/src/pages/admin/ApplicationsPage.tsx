@@ -17,48 +17,62 @@ import {
   DialogContent,
   DialogActions,
   TextField,
+  CircularProgress,
+  Alert,
 } from '@mui/material'
 import CheckIcon from '@mui/icons-material/Check'
 import CloseIcon from '@mui/icons-material/Close'
-
-// Mock data
-const mockApplications = [
-  {
-    id: '1',
-    name: '山田太郎',
-    email: 'yamada@example.com',
-    purpose: 'ECサイトの開発を学びたい',
-    status: 'pending',
-    appliedAt: '2025-11-05 10:30',
-  },
-  {
-    id: '2',
-    name: '佐藤花子',
-    email: 'sato@example.com',
-    purpose: '社内システムの構築',
-    status: 'pending',
-    appliedAt: '2025-11-05 09:15',
-  },
-]
+import {
+  usePendingApplications,
+  useApproveApplication,
+  useRejectApplication,
+} from '../../hooks/useAdmin'
 
 export default function ApplicationsPage() {
-  const [applications, setApplications] = useState(mockApplications)
   const [selectedApp, setSelectedApp] = useState<any>(null)
   const [rejectReason, setRejectReason] = useState('')
 
-  const handleApprove = (id: string) => {
-    // TODO: Implement approve API
-    console.log('Approve:', id)
-    setApplications(applications.filter((app) => app.id !== id))
-    setSelectedApp(null)
+  const { data: applications, isLoading, error } = usePendingApplications()
+  const approveMutation = useApproveApplication()
+  const rejectMutation = useRejectApplication()
+
+  const handleApprove = async (id: string) => {
+    try {
+      await approveMutation.mutateAsync(id)
+      setSelectedApp(null)
+    } catch (error) {
+      console.error('承認エラー:', error)
+    }
   }
 
-  const handleReject = (id: string) => {
-    // TODO: Implement reject API
-    console.log('Reject:', id, rejectReason)
-    setApplications(applications.filter((app) => app.id !== id))
-    setSelectedApp(null)
-    setRejectReason('')
+  const handleReject = async (id: string) => {
+    if (!rejectReason.trim()) {
+      return
+    }
+
+    try {
+      await rejectMutation.mutateAsync({ id, reason: rejectReason })
+      setSelectedApp(null)
+      setRejectReason('')
+    } catch (error) {
+      console.error('却下エラー:', error)
+    }
+  }
+
+  if (isLoading) {
+    return (
+      <Box sx={{ display: 'flex', justifyContent: 'center', py: 8 }}>
+        <CircularProgress />
+      </Box>
+    )
+  }
+
+  if (error) {
+    return (
+      <Alert severity="error">
+        申請一覧の取得に失敗しました
+      </Alert>
+    )
   }
 
   return (
@@ -69,20 +83,21 @@ export default function ApplicationsPage() {
 
       <Card>
         <CardContent>
-          <TableContainer>
-            <Table>
-              <TableHead>
-                <TableRow>
-                  <TableCell>申請日時</TableCell>
-                  <TableCell>氏名</TableCell>
-                  <TableCell>メール</TableCell>
-                  <TableCell>利用目的</TableCell>
-                  <TableCell>ステータス</TableCell>
-                  <TableCell>操作</TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {applications.map((app) => (
+          {applications && applications.length > 0 ? (
+            <TableContainer>
+              <Table>
+                <TableHead>
+                  <TableRow>
+                    <TableCell>申請日時</TableCell>
+                    <TableCell>氏名</TableCell>
+                    <TableCell>メール</TableCell>
+                    <TableCell>利用目的</TableCell>
+                    <TableCell>ステータス</TableCell>
+                    <TableCell>操作</TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {applications.map((app: any) => (
                   <TableRow key={app.id}>
                     <TableCell>{app.appliedAt}</TableCell>
                     <TableCell>{app.name}</TableCell>
@@ -97,15 +112,17 @@ export default function ApplicationsPage() {
                         color="success"
                         startIcon={<CheckIcon />}
                         onClick={() => handleApprove(app.id)}
+                        disabled={approveMutation.isPending || rejectMutation.isPending}
                         sx={{ mr: 1 }}
                       >
-                        承認
+                        {approveMutation.isPending ? '承認中...' : '承認'}
                       </Button>
                       <Button
                         size="small"
                         color="error"
                         startIcon={<CloseIcon />}
                         onClick={() => setSelectedApp(app)}
+                        disabled={approveMutation.isPending || rejectMutation.isPending}
                       >
                         却下
                       </Button>
@@ -115,8 +132,7 @@ export default function ApplicationsPage() {
               </TableBody>
             </Table>
           </TableContainer>
-
-          {applications.length === 0 && (
+          ) : (
             <Box sx={{ textAlign: 'center', py: 4 }}>
               <Typography color="text.secondary">審査待ちの申請はありません</Typography>
             </Box>

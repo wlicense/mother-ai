@@ -1,15 +1,12 @@
 import { Box, Card, CardContent, Typography, Alert, Button } from '@mui/material'
 import HourglassEmptyIcon from '@mui/icons-material/HourglassEmpty'
-import { useAuthStore } from '@/stores/authStore'
-import { useNavigate } from 'react-router-dom'
+import { useLogout } from '../../hooks/useAuth'
 
 export default function PendingPage() {
-  const { logout } = useAuthStore()
-  const navigate = useNavigate()
+  const logout = useLogout()
 
   const handleLogout = () => {
     logout()
-    navigate('/login')
   }
 
   return (

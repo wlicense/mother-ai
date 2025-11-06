@@ -14,7 +14,7 @@ import {
 } from '@mui/material'
 import MenuIcon from '@mui/icons-material/Menu'
 import AccountCircle from '@mui/icons-material/AccountCircle'
-import { useAuth } from '@/features/auth/hooks/useAuth'
+import { useCurrentUser, useLogout } from '../hooks/useAuth'
 
 interface HeaderProps {
   onMenuClick?: () => void
@@ -22,12 +22,13 @@ interface HeaderProps {
 
 export const Header: React.FC<HeaderProps> = ({ onMenuClick }) => {
   const navigate = useNavigate()
-  const { user, logout } = useAuth()
+  const { data: user } = useCurrentUser()
+  const logout = useLogout()
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null)
 
   const handleLogout = async () => {
     try {
-      await logout()
+      logout()
       navigate('/login')
     } catch (error) {
       console.error('Logout error:', error)

@@ -11,36 +11,28 @@ import {
   TableRow,
   Chip,
   IconButton,
+  CircularProgress,
+  Alert,
 } from '@mui/material'
 import BlockIcon from '@mui/icons-material/Block'
 import CheckCircleIcon from '@mui/icons-material/CheckCircle'
-
-// Mock data
-const mockUsers = [
-  {
-    id: '1',
-    name: '山田太郎',
-    email: 'yamada@example.com',
-    role: 'user',
-    status: 'approved',
-    projectCount: 3,
-    lastLogin: '2025-11-05 14:20',
-  },
-  {
-    id: '2',
-    name: '佐藤花子',
-    email: 'sato@example.com',
-    role: 'user',
-    status: 'approved',
-    projectCount: 1,
-    lastLogin: '2025-11-04 09:15',
-  },
-]
+import { useAllUsers, useSuspendUser, useActivateUser } from '../../hooks/useAdmin'
 
 export default function UsersManagementPage() {
-  const handleToggleStatus = (id: string) => {
-    // TODO: Implement status toggle API
-    console.log('Toggle status:', id)
+  const { data: users, isLoading, error } = useAllUsers()
+  const suspendMutation = useSuspendUser()
+  const activateMutation = useActivateUser()
+
+  const handleToggleStatus = async (userId: string, currentStatus: string) => {
+    try {
+      if (currentStatus === 'approved') {
+        await suspendMutation.mutateAsync(userId)
+      } else if (currentStatus === 'suspended') {
+        await activateMutation.mutateAsync(userId)
+      }
+    } catch (error) {
+      console.error('ステータス変更エラー:', error)
+    }
   }
 
   const getStatusChip = (status: string) => {
@@ -58,6 +50,22 @@ export default function UsersManagementPage() {
     }
   }
 
+  if (isLoading) {
+    return (
+      <Box sx={{ display: 'flex', justifyContent: 'center', py: 8 }}>
+        <CircularProgress />
+      </Box>
+    )
+  }
+
+  if (error) {
+    return (
+      <Alert severity="error">
+        ユーザー一覧の取得に失敗しました
+      </Alert>
+    )
+  }
+
   return (
     <Box>
       <Typography variant="h4" component="h1" fontWeight="bold" gutterBottom>
@@ -66,21 +74,22 @@ export default function UsersManagementPage() {
 
       <Card>
         <CardContent>
-          <TableContainer>
-            <Table>
-              <TableHead>
-                <TableRow>
-                  <TableCell>氏名</TableCell>
-                  <TableCell>メール</TableCell>
-                  <TableCell>ロール</TableCell>
-                  <TableCell>ステータス</TableCell>
-                  <TableCell>プロジェクト数</TableCell>
-                  <TableCell>最終ログイン</TableCell>
-                  <TableCell>操作</TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {mockUsers.map((user) => (
+          {users && users.length > 0 ? (
+            <TableContainer>
+              <Table>
+                <TableHead>
+                  <TableRow>
+                    <TableCell>氏名</TableCell>
+                    <TableCell>メール</TableCell>
+                    <TableCell>ロール</TableCell>
+                    <TableCell>ステータス</TableCell>
+                    <TableCell>プロジェクト数</TableCell>
+                    <TableCell>最終ログイン</TableCell>
+                    <TableCell>操作</TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {users.map((user: any) => (
                   <TableRow key={user.id}>
                     <TableCell>{user.name}</TableCell>
                     <TableCell>{user.email}</TableCell>
@@ -93,12 +102,13 @@ export default function UsersManagementPage() {
                     </TableCell>
                     <TableCell>{getStatusChip(user.status)}</TableCell>
                     <TableCell>{user.projectCount}</TableCell>
-                    <TableCell>{user.lastLogin}</TableCell>
+                    <TableCell>{user.last_login || '-'}</TableCell>
                     <TableCell>
                       <IconButton
                         size="small"
                         color={user.status === 'approved' ? 'error' : 'success'}
-                        onClick={() => handleToggleStatus(user.id)}
+                        onClick={() => handleToggleStatus(user.id, user.status)}
+                        disabled={suspendMutation.isPending || activateMutation.isPending}
                       >
                         {user.status === 'approved' ? <BlockIcon /> : <CheckCircleIcon />}
                       </IconButton>
@@ -108,6 +118,11 @@ export default function UsersManagementPage() {
               </TableBody>
             </Table>
           </TableContainer>
+          ) : (
+            <Box sx={{ textAlign: 'center', py: 4 }}>
+              <Typography color="text.secondary">ユーザーがいません</Typography>
+            </Box>
+          )}
         </CardContent>
       </Card>
     </Box>

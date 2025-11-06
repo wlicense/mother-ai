@@ -10,41 +10,33 @@ import {
   TableContainer,
   TableHead,
   TableRow,
+  CircularProgress,
+  Alert,
 } from '@mui/material'
 import TrendingUpIcon from '@mui/icons-material/TrendingUp'
 import AttachMoneyIcon from '@mui/icons-material/AttachMoney'
 import ApiIcon from '@mui/icons-material/Api'
-
-// Mock data
-const mockStats = {
-  totalCalls: 12450,
-  totalCost: 25800,
-  todayCalls: 1230,
-  todayCost: 2400,
-}
-
-const mockRecentCalls = [
-  {
-    id: '1',
-    userId: '山田太郎',
-    projectName: 'ECサイト構築',
-    model: 'claude-3-5-sonnet-20250929',
-    tokens: 1250,
-    cost: 180,
-    timestamp: '2025-11-05 15:30:22',
-  },
-  {
-    id: '2',
-    userId: '佐藤花子',
-    projectName: '在庫管理システム',
-    model: 'claude-3-5-sonnet-20250929',
-    tokens: 980,
-    cost: 140,
-    timestamp: '2025-11-05 15:28:15',
-  },
-]
+import { useAPIStats } from '../../hooks/useAdmin'
 
 export default function ApiMonitorPage() {
+  const { data: stats, isLoading, error } = useAPIStats()
+
+  if (isLoading) {
+    return (
+      <Box sx={{ display: 'flex', justifyContent: 'center', py: 8 }}>
+        <CircularProgress />
+      </Box>
+    )
+  }
+
+  if (error || !stats) {
+    return (
+      <Alert severity="error">
+        API統計の取得に失敗しました
+      </Alert>
+    )
+  }
+
   return (
     <Box>
       <Typography variant="h4" component="h1" fontWeight="bold" gutterBottom>
@@ -63,7 +55,7 @@ export default function ApiMonitorPage() {
                 </Typography>
               </Box>
               <Typography variant="h4" fontWeight="bold">
-                {mockStats.totalCalls.toLocaleString()}
+                {stats.total_requests.toLocaleString()}
               </Typography>
             </CardContent>
           </Card>
@@ -79,7 +71,7 @@ export default function ApiMonitorPage() {
                 </Typography>
               </Box>
               <Typography variant="h4" fontWeight="bold">
-                ¥{mockStats.totalCost.toLocaleString()}
+                ¥{Math.round(stats.total_cost).toLocaleString()}
               </Typography>
             </CardContent>
           </Card>
@@ -95,7 +87,7 @@ export default function ApiMonitorPage() {
                 </Typography>
               </Box>
               <Typography variant="h4" fontWeight="bold">
-                {mockStats.todayCalls.toLocaleString()}
+                {stats.today_requests.toLocaleString()}
               </Typography>
             </CardContent>
           </Card>
@@ -111,46 +103,44 @@ export default function ApiMonitorPage() {
                 </Typography>
               </Box>
               <Typography variant="h4" fontWeight="bold">
-                ¥{mockStats.todayCost.toLocaleString()}
+                ¥{Math.round(stats.today_cost).toLocaleString()}
               </Typography>
             </CardContent>
           </Card>
         </Grid>
       </Grid>
 
-      {/* Recent Calls Table */}
+      {/* Top Users Table */}
       <Card>
         <CardContent>
           <Typography variant="h6" gutterBottom>
-            最近のAPI呼び出し
+            トップユーザー
           </Typography>
           <TableContainer>
             <Table>
               <TableHead>
                 <TableRow>
-                  <TableCell>日時</TableCell>
-                  <TableCell>ユーザー</TableCell>
-                  <TableCell>プロジェクト</TableCell>
-                  <TableCell>モデル</TableCell>
-                  <TableCell>トークン数</TableCell>
-                  <TableCell>コスト（円）</TableCell>
+                  <TableCell>ユーザー名</TableCell>
+                  <TableCell>総API呼び出し数</TableCell>
+                  <TableCell>総コスト（円）</TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
-                {mockRecentCalls.map((call) => (
-                  <TableRow key={call.id}>
-                    <TableCell>{call.timestamp}</TableCell>
-                    <TableCell>{call.userId}</TableCell>
-                    <TableCell>{call.projectName}</TableCell>
-                    <TableCell>
-                      <Typography variant="body2" sx={{ fontFamily: 'monospace', fontSize: '0.75rem' }}>
-                        {call.model}
-                      </Typography>
+                {stats.top_users && stats.top_users.length > 0 ? (
+                  stats.top_users.map((user) => (
+                    <TableRow key={user.user_id}>
+                      <TableCell>{user.user_name}</TableCell>
+                      <TableCell>{user.total_requests.toLocaleString()}</TableCell>
+                      <TableCell>¥{Math.round(user.total_cost).toLocaleString()}</TableCell>
+                    </TableRow>
+                  ))
+                ) : (
+                  <TableRow>
+                    <TableCell colSpan={3} align="center">
+                      <Typography color="text.secondary">データがありません</Typography>
                     </TableCell>
-                    <TableCell>{call.tokens.toLocaleString()}</TableCell>
-                    <TableCell>¥{call.cost}</TableCell>
                   </TableRow>
-                ))}
+                )}
               </TableBody>
             </Table>
           </TableContainer>

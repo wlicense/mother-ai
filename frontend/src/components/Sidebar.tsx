@@ -15,7 +15,7 @@ import PersonIcon from '@mui/icons-material/Person'
 import AdminPanelSettingsIcon from '@mui/icons-material/AdminPanelSettings'
 import MonitorHeartIcon from '@mui/icons-material/MonitorHeart'
 import PeopleIcon from '@mui/icons-material/People'
-import { useAuth } from '@/features/auth/hooks/useAuth'
+import { useCurrentUser } from '../hooks/useAuth'
 
 interface MenuItem {
   text: string
@@ -27,7 +27,7 @@ interface MenuItem {
 export const Sidebar: React.FC = () => {
   const navigate = useNavigate()
   const location = useLocation()
-  const { user } = useAuth()
+  const { data: user } = useCurrentUser()
 
   const userMenuItems: MenuItem[] = [
     {

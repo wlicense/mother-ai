@@ -10,9 +10,12 @@ import {
   Link,
   Divider,
   Alert,
+  CircularProgress,
 } from '@mui/material'
 import GoogleIcon from '@mui/icons-material/Google'
 import GitHubIcon from '@mui/icons-material/GitHub'
+import { useLogin } from '../../hooks/useAuth'
+import * as authService from '../../services/authService'
 
 export default function LoginPage() {
   const navigate = useNavigate()
@@ -20,21 +23,31 @@ export default function LoginPage() {
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
 
+  const loginMutation = useLogin()
+
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
     setError('')
 
-    // TODO: Implement actual login API call
-    console.log('Login:', { email, password })
+    if (!email || !password) {
+      setError('メールアドレスとパスワードを入力してください')
+      return
+    }
 
-    // Placeholder - will implement with backend
-    setError('ログイン機能は実装中です')
+    try {
+      await loginMutation.mutateAsync({ email, password })
+    } catch (err: any) {
+      const errorMessage = err.response?.data?.detail || 'ログインに失敗しました'
+      setError(errorMessage)
+    }
   }
 
   const handleOAuthLogin = (provider: 'google' | 'github') => {
-    // TODO: Implement OAuth login
-    console.log('OAuth login:', provider)
-    alert(`${provider}ログインは実装中です`)
+    if (provider === 'google') {
+      authService.loginWithGoogle()
+    } else if (provider === 'github') {
+      authService.loginWithGitHub()
+    }
   }
 
   return (
@@ -84,8 +97,15 @@ export default function LoginPage() {
                 パスワードをお忘れですか？
               </Link>
             </Box>
-            <Button type="submit" variant="contained" fullWidth size="large">
-              ログイン
+            <Button
+              type="submit"
+              variant="contained"
+              fullWidth
+              size="large"
+              disabled={loginMutation.isPending}
+              startIcon={loginMutation.isPending ? <CircularProgress size={20} /> : null}
+            >
+              {loginMutation.isPending ? 'ログイン中...' : 'ログイン'}
             </Button>
           </Box>
 

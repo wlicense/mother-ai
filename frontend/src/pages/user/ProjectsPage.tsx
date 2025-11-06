@@ -14,29 +14,12 @@ import {
   DialogContent,
   DialogActions,
   TextField,
+  CircularProgress,
+  Alert,
 } from '@mui/material'
 import AddIcon from '@mui/icons-material/Add'
 import FolderIcon from '@mui/icons-material/Folder'
-
-// Placeholder project data
-const mockProjects = [
-  {
-    id: '1',
-    name: 'ECサイト構築',
-    description: 'オンラインショップの開発',
-    status: 'in_progress',
-    phase: 2,
-    createdAt: '2025-11-01',
-  },
-  {
-    id: '2',
-    name: '在庫管理システム',
-    description: '倉庫の在庫を管理するWebアプリ',
-    status: 'completed',
-    phase: 3,
-    createdAt: '2025-10-28',
-  },
-]
+import { useProjects, useCreateProject } from '../../hooks/useProjects'
 
 export default function ProjectsPage() {
   const navigate = useNavigate()
@@ -44,12 +27,25 @@ export default function ProjectsPage() {
   const [newProjectName, setNewProjectName] = useState('')
   const [newProjectDescription, setNewProjectDescription] = useState('')
 
-  const handleCreateProject = () => {
-    // TODO: Implement project creation API
-    console.log('Create project:', { newProjectName, newProjectDescription })
-    setOpen(false)
-    setNewProjectName('')
-    setNewProjectDescription('')
+  const { data: projects, isLoading, error } = useProjects()
+  const createProjectMutation = useCreateProject()
+
+  const handleCreateProject = async () => {
+    if (!newProjectName.trim()) {
+      return
+    }
+
+    try {
+      await createProjectMutation.mutateAsync({
+        name: newProjectName,
+        description: newProjectDescription,
+      })
+      setOpen(false)
+      setNewProjectName('')
+      setNewProjectDescription('')
+    } catch (error) {
+      console.error('プロジェクト作成エラー:', error)
+    }
   }
 
   const getStatusColor = (status: string) => {
@@ -85,8 +81,28 @@ export default function ProjectsPage() {
         </Button>
       </Box>
 
+      {isLoading && (
+        <Box sx={{ display: 'flex', justifyContent: 'center', py: 8 }}>
+          <CircularProgress />
+        </Box>
+      )}
+
+      {error && (
+        <Alert severity="error" sx={{ mb: 3 }}>
+          プロジェクト一覧の取得に失敗しました
+        </Alert>
+      )}
+
+      {!isLoading && !error && projects && projects.length === 0 && (
+        <Box sx={{ textAlign: 'center', py: 8 }}>
+          <Typography variant="body1" color="text.secondary">
+            プロジェクトがありません。新規作成してください。
+          </Typography>
+        </Box>
+      )}
+
       <Grid container spacing={3}>
-        {mockProjects.map((project) => (
+        {!isLoading && projects && projects.map((project) => (
           <Grid item xs={12} md={6} lg={4} key={project.id}>
             <Card sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
               <CardContent sx={{ flexGrow: 1 }}>
@@ -105,7 +121,7 @@ export default function ProjectsPage() {
                     color={getStatusColor(project.status)}
                     size="small"
                   />
-                  <Chip label={`Phase ${project.phase}`} size="small" variant="outlined" />
+                  <Chip label={`Phase ${project.current_phase}`} size="small" variant="outlined" />
                 </Box>
               </CardContent>
               <CardActions>
@@ -138,9 +154,16 @@ export default function ProjectsPage() {
           />
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setOpen(false)}>キャンセル</Button>
-          <Button variant="contained" onClick={handleCreateProject}>
-            作成
+          <Button onClick={() => setOpen(false)} disabled={createProjectMutation.isPending}>
+            キャンセル
+          </Button>
+          <Button
+            variant="contained"
+            onClick={handleCreateProject}
+            disabled={createProjectMutation.isPending || !newProjectName.trim()}
+            startIcon={createProjectMutation.isPending ? <CircularProgress size={20} /> : null}
+          >
+            {createProjectMutation.isPending ? '作成中...' : '作成'}
           </Button>
         </DialogActions>
       </Dialog>

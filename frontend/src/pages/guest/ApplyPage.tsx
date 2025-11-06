@@ -9,7 +9,9 @@ import {
   Typography,
   Link,
   Alert,
+  CircularProgress,
 } from '@mui/material'
+import { useRegister } from '../../hooks/useAuth'
 
 export default function ApplyPage() {
   const navigate = useNavigate()
@@ -22,6 +24,8 @@ export default function ApplyPage() {
   })
   const [error, setError] = useState('')
   const [success, setSuccess] = useState(false)
+
+  const registerMutation = useRegister()
 
   const handleChange = (field: string) => (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({ ...formData, [field]: e.target.value })
@@ -41,14 +45,18 @@ export default function ApplyPage() {
       return
     }
 
-    // TODO: Implement actual application API call
-    console.log('Application submitted:', formData)
-
-    // Placeholder success
-    setSuccess(true)
-    setTimeout(() => {
-      navigate('/login')
-    }, 3000)
+    try {
+      await registerMutation.mutateAsync({
+        name: formData.name,
+        email: formData.email,
+        password: formData.password,
+        purpose: formData.purpose,
+      })
+      setSuccess(true)
+    } catch (err: any) {
+      const errorMessage = err.response?.data?.detail || '申請に失敗しました'
+      setError(errorMessage)
+    }
   }
 
   if (success) {
@@ -133,8 +141,15 @@ export default function ApplyPage() {
               helperText="どのようなプロジェクトで利用したいか、具体的に記述してください（20文字以上）"
               sx={{ mb: 3 }}
             />
-            <Button type="submit" variant="contained" fullWidth size="large">
-              申請する
+            <Button
+              type="submit"
+              variant="contained"
+              fullWidth
+              size="large"
+              disabled={registerMutation.isPending}
+              startIcon={registerMutation.isPending ? <CircularProgress size={20} /> : null}
+            >
+              {registerMutation.isPending ? '申請中...' : '申請する'}
             </Button>
           </Box>
 
