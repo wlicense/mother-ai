@@ -4,9 +4,10 @@ Claude API サービス
 Claude APIとの通信を管理します。
 """
 import os
-from typing import AsyncGenerator
+from typing import AsyncGenerator, Optional
 from anthropic import Anthropic, AsyncAnthropic
 from app.core.config import settings
+from app.utils.encryption import decrypt_api_key
 
 
 class ClaudeService:
@@ -23,6 +24,8 @@ class ClaudeService:
         messages: list[dict],
         system_prompt: str = "あなたは親切で有能なAIアシスタントです。",
         max_tokens: int = 4096,
+        use_cache: bool = True,
+        user_api_key: Optional[str] = None,
     ) -> AsyncGenerator[str, None]:
         """
         メッセージを送信してストリーミングで応答を取得
@@ -31,17 +34,47 @@ class ClaudeService:
             messages: メッセージ履歴 [{"role": "user", "content": "..."}]
             system_prompt: システムプロンプト
             max_tokens: 最大トークン数
+            use_cache: プロンプトキャッシングを使用するか（デフォルト: True）
+            user_api_key: ユーザー独自のAPIキー（暗号化済み、オプション）
 
         Yields:
             AIの応答テキスト（トークン単位）
         """
         try:
+            # ユーザー独自のAPIキーがある場合は使用
+            client = self.client
+            if user_api_key:
+                decrypted_key = decrypt_api_key(user_api_key)
+                if decrypted_key:
+                    client = AsyncAnthropic(api_key=decrypted_key)
+
+            # プロンプトキャッシング対応
+            # システムプロンプトをキャッシュブロックとして設定
+            system_blocks = [
+                {
+                    "type": "text",
+                    "text": system_prompt,
+                }
+            ]
+
+            # キャッシュを有効にする場合、cache_controlを追加
+            if use_cache and len(system_prompt) > 1024:  # 長いプロンプトのみキャッシュ
+                system_blocks[0]["cache_control"] = {"type": "ephemeral"}
+
+            # メッセージ履歴が長い場合、過去のメッセージもキャッシュ
+            processed_messages = messages.copy()
+            if use_cache and len(processed_messages) > 2:
+                # 最後から2番目のメッセージにキャッシュマーカーを追加
+                # （最新メッセージは変わるのでキャッシュしない）
+                if len(processed_messages) >= 2:
+                    processed_messages[-2]["cache_control"] = {"type": "ephemeral"}
+
             # Claude APIにストリーミングリクエスト
-            async with self.client.messages.stream(
+            async with client.messages.stream(
                 model=self.model,
                 max_tokens=max_tokens,
-                system=system_prompt,
-                messages=messages,
+                system=system_blocks,
+                messages=processed_messages,
             ) as stream:
                 async for text in stream.text_stream:
                     yield text
@@ -57,6 +90,7 @@ class ClaudeService:
         messages: list[dict],
         system_prompt: str = "あなたは親切で有能なAIアシスタントです。",
         max_tokens: int = 4096,
+        user_api_key: Optional[str] = None,
     ) -> str:
         """
         メッセージを送信して完全な応答を取得（非ストリーミング）
@@ -65,12 +99,20 @@ class ClaudeService:
             messages: メッセージ履歴
             system_prompt: システムプロンプト
             max_tokens: 最大トークン数
+            user_api_key: ユーザー独自のAPIキー（暗号化済み、オプション）
 
         Returns:
             AIの応答テキスト（完全版）
         """
         try:
-            response = await self.client.messages.create(
+            # ユーザー独自のAPIキーがある場合は使用
+            client = self.client
+            if user_api_key:
+                decrypted_key = decrypt_api_key(user_api_key)
+                if decrypted_key:
+                    client = AsyncAnthropic(api_key=decrypted_key)
+
+            response = await client.messages.create(
                 model=self.model,
                 max_tokens=max_tokens,
                 system=system_prompt,

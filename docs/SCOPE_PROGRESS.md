@@ -66,14 +66,14 @@
 
 | 順序 | スライス名 | 主要機能 | エンドポイント | 依存スライス | 完了 |
 |------|-----------|---------|-------------|-------------|------|
-| 1 | 認証基盤 | ログイン/登録/ユーザー情報取得 | POST /auth/login, POST /auth/register, GET /users/me | なし | [ ] |
-| 2-A | 申請管理（管理者） | 申請承認・却下 | GET /admin/applications, PUT /admin/applications/{id}/approve, PUT /admin/applications/{id}/reject | 1 | [ ] |
-| 2-B | プロジェクト管理 | プロジェクトCRUD | POST /projects, GET /projects, GET /projects/{id}, DELETE /projects/{id} | 1 | [ ] |
-| 3-A | AI対話機能 | メッセージ送受信（SSE） | POST /projects/{id}/messages, GET /projects/{id}/messages | 2-B | [ ] |
-| 3-B | ユーザープロフィール | プロフィール更新 | PUT /users/me | 1 | [ ] |
-| 4-A | OAuth認証 | Google/GitHub認証 | POST /auth/oauth/{provider} | 1 | [ ] |
-| 4-B | ユーザー管理（管理者） | ユーザー一覧 | GET /admin/users | 1 | [ ] |
-| 5 | API監視・統計 | 使用量・コスト監視 | GET /users/me/api-usage, GET /admin/api-monitor/stats | 3-A | [ ] |
+| 1 | 認証基盤 | ログイン/登録/ユーザー情報取得 | POST /auth/login, POST /auth/register, GET /users/me | なし | [x] |
+| 2-A | 申請管理（管理者） | 申請承認・却下 | GET /admin/applications, PUT /admin/applications/{id}/approve, PUT /admin/applications/{id}/reject | 1 | [x] |
+| 2-B | プロジェクト管理 | プロジェクトCRUD | POST /projects, GET /projects, GET /projects/{id}, DELETE /projects/{id} | 1 | [x] |
+| 3-A | AI対話機能 | メッセージ送受信（SSE） | POST /projects/{id}/messages, GET /projects/{id}/messages | 2-B | [x] |
+| 3-B | ユーザープロフィール | プロフィール更新 | PUT /users/me | 1 | [x] |
+| 4-A | OAuth認証 | Google/GitHub認証 | POST /auth/oauth/{provider} | 1 | [x] |
+| 4-B | ユーザー管理（管理者） | ユーザー一覧 | GET /admin/users | 1 | [x] |
+| 5 | API監視・統計 | 使用量・コスト監視 | GET /users/me/api-usage, GET /admin/api-monitor/stats | 3-A | [x] |
 
 **※ 番号-アルファベット表記（2-A, 2-B等）は並列実装可能を示す**
 
@@ -82,68 +82,68 @@
 #### スライス1: 認証基盤
 | タスク | エンドポイント | メソッド | 説明 | 完了 |
 |--------|--------------|---------|------|------|
-| 1.1 | /api/v1/auth/register | POST | 新規ユーザー申請 | [ ] |
-| 1.2 | /api/v1/auth/login | POST | メール/パスワードログイン | [ ] |
-| 1.3 | /api/v1/users/me | GET | 現在のユーザー情報取得 | [ ] |
-| 1.4 | データベース: Users | - | Usersテーブル作成 | [ ] |
-| 1.5 | データベース: Applications | - | Applicationsテーブル作成 | [ ] |
-| 1.6 | JWT認証ミドルウェア | - | トークン検証機能 | [ ] |
-| 1.7 | パスワードハッシュ化 | - | bcrypt実装 | [ ] |
+| 1.1 | /api/v1/auth/register | POST | 新規ユーザー申請 | [x] |
+| 1.2 | /api/v1/auth/login | POST | メール/パスワードログイン | [x] |
+| 1.3 | /api/v1/users/me | GET | 現在のユーザー情報取得 | [x] |
+| 1.4 | データベース: Users | - | Usersテーブル作成 | [x] |
+| 1.5 | データベース: Applications | - | Applicationsテーブル作成 | [x] |
+| 1.6 | JWT認証ミドルウェア | - | トークン検証機能 | [x] |
+| 1.7 | パスワードハッシュ化 | - | bcrypt実装 | [x] |
 
 #### スライス2-A: 申請管理（管理者）
 | タスク | エンドポイント | メソッド | 説明 | 完了 |
 |--------|--------------|---------|------|------|
-| 2A.1 | /api/v1/admin/applications | GET | 申請一覧取得 | [ ] |
-| 2A.2 | /api/v1/admin/applications/{id}/approve | PUT | 申請承認 | [ ] |
-| 2A.3 | /api/v1/admin/applications/{id}/reject | PUT | 申請却下 | [ ] |
-| 2A.4 | メール通知機能 | - | 承認・却下通知メール送信 | [ ] |
+| 2A.1 | /api/v1/admin/applications | GET | 申請一覧取得 | [x] |
+| 2A.2 | /api/v1/admin/applications/{id}/approve | PUT | 申請承認 | [x] |
+| 2A.3 | /api/v1/admin/applications/{id}/reject | PUT | 申請却下 | [x] |
+| 2A.4 | メール通知機能 | - | 承認・却下通知メール送信 | [x] |
 
 #### スライス2-B: プロジェクト管理
 | タスク | エンドポイント | メソッド | 説明 | 完了 |
 |--------|--------------|---------|------|------|
-| 2B.1 | /api/v1/projects | POST | 新規プロジェクト作成 | [ ] |
-| 2B.2 | /api/v1/projects | GET | プロジェクト一覧取得 | [ ] |
-| 2B.3 | /api/v1/projects/{id} | GET | プロジェクト詳細取得 | [ ] |
-| 2B.4 | /api/v1/projects/{id} | DELETE | プロジェクト削除 | [ ] |
-| 2B.5 | データベース: Projects | - | Projectsテーブル作成 | [ ] |
-| 2B.6 | データベース: PhaseProgress | - | PhaseProgressテーブル作成 | [ ] |
+| 2B.1 | /api/v1/projects | POST | 新規プロジェクト作成 | [x] |
+| 2B.2 | /api/v1/projects | GET | プロジェクト一覧取得 | [x] |
+| 2B.3 | /api/v1/projects/{id} | GET | プロジェクト詳細取得 | [x] |
+| 2B.4 | /api/v1/projects/{id} | DELETE | プロジェクト削除 | [x] |
+| 2B.5 | データベース: Projects | - | Projectsテーブル作成 | [x] |
+| 2B.6 | データベース: PhaseProgress | - | PhaseProgressテーブル作成 | [x] |
 
 #### スライス3-A: AI対話機能
 | タスク | エンドポイント | メソッド | 説明 | 完了 |
 |--------|--------------|---------|------|------|
-| 3A.1 | /api/v1/projects/{id}/messages | POST | メッセージ送信（SSE） | [ ] |
-| 3A.2 | /api/v1/projects/{id}/messages | GET | チャット履歴取得 | [ ] |
-| 3A.3 | Claude API統合 | - | Claude API SDKセットアップ | [ ] |
-| 3A.4 | SSEストリーミング実装 | - | Server-Sent Events実装 | [ ] |
-| 3A.5 | プロンプトキャッシング | - | キャッシュ機能実装 | [ ] |
-| 3A.6 | データベース: ChatMessages | - | ChatMessagesテーブル作成 | [ ] |
-| 3A.7 | データベース: APIUsageLogs | - | APIUsageLogsテーブル作成 | [ ] |
+| 3A.1 | /api/v1/projects/{id}/messages | POST | メッセージ送信（SSE） | [x] |
+| 3A.2 | /api/v1/projects/{id}/messages | GET | チャット履歴取得 | [x] |
+| 3A.3 | Claude API統合 | - | Claude API SDKセットアップ | [x] |
+| 3A.4 | SSEストリーミング実装 | - | Server-Sent Events実装 | [x] |
+| 3A.5 | プロンプトキャッシング | - | キャッシュ機能実装 | [x] |
+| 3A.6 | データベース: ChatMessages | - | ChatMessagesテーブル作成 | [x] |
+| 3A.7 | データベース: APIUsageLogs | - | APIUsageLogsテーブル作成 | [x] |
 
 #### スライス3-B: ユーザープロフィール
 | タスク | エンドポイント | メソッド | 説明 | 完了 |
 |--------|--------------|---------|------|------|
-| 3B.1 | /api/v1/users/me | PUT | ユーザー情報更新 | [ ] |
-| 3B.2 | APIキー暗号化 | - | Fernet暗号化実装 | [ ] |
+| 3B.1 | /api/v1/users/me | PUT | ユーザー情報更新 | [x] |
+| 3B.2 | APIキー暗号化 | - | Fernet暗号化実装 | [x] |
 
 #### スライス4-A: OAuth認証
 | タスク | エンドポイント | メソッド | 説明 | 完了 |
 |--------|--------------|---------|------|------|
-| 4A.1 | /api/v1/auth/oauth/google | POST | Google OAuth認証 | [ ] |
-| 4A.2 | /api/v1/auth/oauth/github | POST | GitHub OAuth認証 | [ ] |
-| 4A.3 | OAuth設定 | - | Google/GitHub OAuth設定 | [ ] |
+| 4A.1 | /api/v1/auth/oauth/google | GET | Google OAuth認証 | [x] |
+| 4A.2 | /api/v1/auth/oauth/github | GET | GitHub OAuth認証 | [x] |
+| 4A.3 | OAuth設定 | - | Google/GitHub OAuth設定 | [x] |
 
 #### スライス4-B: ユーザー管理（管理者）
 | タスク | エンドポイント | メソッド | 説明 | 完了 |
 |--------|--------------|---------|------|------|
-| 4B.1 | /api/v1/admin/users | GET | 全ユーザー一覧取得 | [ ] |
-| 4B.2 | ユーザーステータス変更 | - | ステータス更新機能 | [ ] |
+| 4B.1 | /api/v1/admin/users | GET | 全ユーザー一覧取得 | [x] |
+| 4B.2 | ユーザーステータス変更 | - | ステータス更新機能 | [x] |
 
 #### スライス5: API監視・統計
 | タスク | エンドポイント | メソッド | 説明 | 完了 |
 |--------|--------------|---------|------|------|
-| 5.1 | /api/v1/users/me/api-usage | GET | ユーザーのAPI使用量取得 | [ ] |
-| 5.2 | /api/v1/admin/api-monitor/stats | GET | 全体API監視統計取得 | [ ] |
-| 5.3 | 使用量集計バッチ | - | 日次/月次集計処理 | [ ] |
+| 5.1 | /api/v1/users/me/api-usage | GET | ユーザーのAPI使用量取得 | [x] |
+| 5.2 | /api/v1/admin/api-monitor/stats | GET | 全体API監視統計取得 | [x] |
+| 5.3 | 使用量集計バッチ | - | 日次/月次集計処理 | [x] |
 
 ### 2.3 並列実装スケジュール
 

@@ -6,6 +6,7 @@ from typing import List
 from app.core.database import get_db
 from app.core.deps import get_current_admin_user
 from app.models.models import User, UserStatus, Project, ApiLog
+from app.services.email_service import send_approval_email, send_rejection_email
 
 router = APIRouter()
 
@@ -62,7 +63,8 @@ async def approve_application(
     user.status = UserStatus.approved
     db.commit()
 
-    # TODO: ユーザーにメール通知を送る
+    # ユーザーにメール通知を送る
+    await send_approval_email(user.email, user.name)
 
     return {"data": {"message": "ユーザーを承認しました", "userId": user.id}}
 
@@ -88,7 +90,8 @@ async def reject_application(
     user.rejection_reason = "管理者による却下"  # TODO: リクエストボディから理由を取得
     db.commit()
 
-    # TODO: ユーザーにメール通知を送る
+    # ユーザーにメール通知を送る
+    await send_rejection_email(user.email, user.name, user.rejection_reason)
 
     return {"data": {"message": "ユーザーを却下しました", "userId": user.id}}
 

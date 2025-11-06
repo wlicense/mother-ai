@@ -180,7 +180,8 @@ async def send_message(
 
             async for chunk in claude_service.send_message_stream(
                 messages=claude_messages,
-                system_prompt=f"あなたはPhase {request.phase}のAIアシスタントです。ユーザーのプロジェクト開発をサポートします。"
+                system_prompt=f"あなたはPhase {request.phase}のAIアシスタントです。ユーザーのプロジェクト開発をサポートします。",
+                user_api_key=current_user.custom_claude_api_key
             ):
                 full_response += chunk
                 # トークンイベント

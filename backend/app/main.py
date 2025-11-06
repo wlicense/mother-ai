@@ -1,5 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from starlette.middleware.sessions import SessionMiddleware
 from contextlib import asynccontextmanager
 from app.core.config import settings
 from app.api import auth, projects, admin, agents, users
@@ -22,6 +23,13 @@ app = FastAPI(
     description="AI駆動開発プラットフォーム",
     version="0.1.0",
     lifespan=lifespan,
+)
+
+# Session middleware for OAuth (必ずCORSの前に追加)
+app.add_middleware(
+    SessionMiddleware,
+    secret_key=settings.SECRET_KEY,
+    max_age=3600,  # 1時間
 )
 
 # CORS設定

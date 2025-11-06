@@ -4,6 +4,7 @@ from pydantic import BaseModel
 from app.core.database import get_db
 from app.core.deps import get_current_user
 from app.models.models import User
+from app.utils.encryption import encrypt_api_key
 
 router = APIRouter()
 
@@ -45,8 +46,8 @@ async def update_me(
         current_user.name = request.name
 
     if request.custom_claude_api_key:
-        # TODO: APIキーの暗号化実装（Fernet）
-        current_user.custom_claude_api_key = request.custom_claude_api_key
+        # APIキーを暗号化して保存
+        current_user.custom_claude_api_key = encrypt_api_key(request.custom_claude_api_key)
 
     db.commit()
     db.refresh(current_user)

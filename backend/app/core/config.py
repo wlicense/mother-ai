@@ -38,6 +38,9 @@ class Settings(BaseSettings):
     GITHUB_CLIENT_ID: str = ""
     GITHUB_CLIENT_SECRET: str = ""
 
+    # Encryption (for API keys)
+    ENCRYPTION_KEY: str = ""
+
     class Config:
         env_file = ".env"
         case_sensitive = True
