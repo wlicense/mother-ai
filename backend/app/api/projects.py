@@ -1,10 +1,13 @@
 from fastapi import APIRouter, Depends, HTTPException
+from fastapi.responses import StreamingResponse
 from sqlalchemy.orm import Session
 from pydantic import BaseModel
 from typing import List
+import json
 from app.core.database import get_db
 from app.core.deps import get_current_approved_user
 from app.models.models import User, Project, ProjectStatus, Message
+from app.services.claude_service import get_claude_service
 
 router = APIRouter()
 
@@ -130,7 +133,7 @@ async def send_message(
     db: Session = Depends(get_db)
 ):
     """
-    プロジェクトにメッセージを送信し、AIからの応答を取得
+    プロジェクトにメッセージを送信し、AIからの応答をSSEストリーミングで取得
     """
     project = db.query(Project).filter(
         Project.id == project_id,
@@ -149,35 +152,59 @@ async def send_message(
     )
     db.add(user_message)
     db.commit()
+    db.refresh(user_message)
 
-    # TODO: AIエージェントに処理を依頼して応答を取得
-    # 現在はプレースホルダーの応答
-    ai_response = "メッセージを受け取りました。処理中です..."
+    # メッセージ履歴を取得（Claude APIに送信）
+    messages = db.query(Message).filter(
+        Message.project_id == project_id,
+        Message.phase == request.phase
+    ).order_by(Message.created_at).all()
 
-    # AIの応答を保存
-    assistant_message = Message(
-        project_id=project_id,
-        phase=request.phase,
-        role="assistant",
-        content=ai_response,
-    )
-    db.add(assistant_message)
-    db.commit()
+    # Claude API形式に変換
+    claude_messages = [
+        {"role": msg.role, "content": msg.content}
+        for msg in messages
+        if msg.role in ["user", "assistant"]
+    ]
 
-    return {
-        "user_message": {
-            "id": user_message.id,
-            "role": "user",
-            "content": user_message.content,
-            "created_at": user_message.created_at.isoformat(),
-        },
-        "assistant_message": {
-            "id": assistant_message.id,
-            "role": "assistant",
-            "content": assistant_message.content,
-            "created_at": assistant_message.created_at.isoformat(),
-        },
-    }
+    # SSEストリーミング
+    async def event_stream():
+        """Server-Sent Eventsストリーム"""
+        try:
+            # 開始イベント
+            yield f"data: {json.dumps({'type': 'start'})}\n\n"
+
+            # Claude APIからストリーミング取得
+            claude_service = get_claude_service()
+            full_response = ""
+
+            async for chunk in claude_service.send_message_stream(
+                messages=claude_messages,
+                system_prompt=f"あなたはPhase {request.phase}のAIアシスタントです。ユーザーのプロジェクト開発をサポートします。"
+            ):
+                full_response += chunk
+                # トークンイベント
+                yield f"data: {json.dumps({'type': 'token', 'content': chunk})}\n\n"
+
+            # AIの応答をDBに保存
+            assistant_message = Message(
+                project_id=project_id,
+                phase=request.phase,
+                role="assistant",
+                content=full_response,
+            )
+            db.add(assistant_message)
+            db.commit()
+
+            # 完了イベント
+            yield f"data: {json.dumps({'type': 'end', 'messageId': assistant_message.id})}\n\n"
+
+        except Exception as e:
+            # エラーイベント
+            error_msg = f"エラーが発生しました: {str(e)}"
+            yield f"data: {json.dumps({'type': 'error', 'message': error_msg})}\n\n"
+
+    return StreamingResponse(event_stream(), media_type="text/event-stream")
 
 
 @router.delete("/{project_id}")

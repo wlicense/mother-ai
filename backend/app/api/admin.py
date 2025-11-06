@@ -42,16 +42,16 @@ async def get_pending_applications(
     ]
 
 
-@router.post("/applications/approve")
+@router.put("/applications/{id}/approve")
 async def approve_application(
-    request: ApproveUserRequest,
+    id: str,
     current_user: User = Depends(get_current_admin_user),
     db: Session = Depends(get_db)
 ):
     """
     申請を承認
     """
-    user = db.query(User).filter(User.id == request.user_id).first()
+    user = db.query(User).filter(User.id == id).first()
 
     if not user:
         raise HTTPException(status_code=404, detail="ユーザーが見つかりません")
@@ -64,19 +64,19 @@ async def approve_application(
 
     # TODO: ユーザーにメール通知を送る
 
-    return {"message": "ユーザーを承認しました"}
+    return {"data": {"message": "ユーザーを承認しました", "userId": user.id}}
 
 
-@router.post("/applications/reject")
+@router.put("/applications/{id}/reject")
 async def reject_application(
-    request: RejectUserRequest,
+    id: str,
     current_user: User = Depends(get_current_admin_user),
     db: Session = Depends(get_db)
 ):
     """
     申請を却下
     """
-    user = db.query(User).filter(User.id == request.user_id).first()
+    user = db.query(User).filter(User.id == id).first()
 
     if not user:
         raise HTTPException(status_code=404, detail="ユーザーが見つかりません")
@@ -85,12 +85,12 @@ async def reject_application(
         raise HTTPException(status_code=400, detail="このユーザーは既に処理されています")
 
     user.status = UserStatus.rejected
-    user.rejection_reason = request.reason
+    user.rejection_reason = "管理者による却下"  # TODO: リクエストボディから理由を取得
     db.commit()
 
     # TODO: ユーザーにメール通知を送る
 
-    return {"message": "ユーザーを却下しました"}
+    return {"data": {"message": "ユーザーを却下しました", "userId": user.id}}
 
 
 @router.get("/users")
