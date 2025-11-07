@@ -91,7 +91,7 @@ test.describe('P-005: AI対話・プロジェクト開発', () => {
    * - AI応答がストリーミング表示される（SSE）
    * - 応答がチャット履歴に追加される
    */
-  test.only('E2E-P005-002: メッセージ送信', async ({ page }) => {
+  test('E2E-P005-002: メッセージ送信', async ({ page }) => {
     // 1. 承認済みユーザーでログイン
     await loginAsApprovedUser(page);
 

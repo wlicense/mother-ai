@@ -266,7 +266,7 @@ test.describe('P-003: ログインページ', () => {
    * 期待結果:
    * - モバイル・タブレット・デスクトップで適切に表示される
    */
-  test.only('E2E-P003-201: レスポンシブデザイン検証', async ({ page }) => {
+  test('E2E-P003-201: レスポンシブデザイン検証', async ({ page }) => {
     // 1. /login にアクセス
     await page.goto('/login');
 
