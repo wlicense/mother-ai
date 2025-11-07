@@ -1,15 +1,23 @@
 from pydantic_settings import BaseSettings
 from typing import List
+import os
 
 
 class Settings(BaseSettings):
     # App
     APP_NAME: str = "マザーAI"
+    APP_ENV: str = "development"
     DEBUG: bool = True
     PORT: int = 8572
 
-    # CORS
-    ALLOWED_ORIGINS: List[str] = ["http://localhost:3347", "http://127.0.0.1:3347"]
+    # CORS - 環境変数から読み込み、カンマ区切りで複数指定可能
+    CORS_ORIGINS: str = "http://localhost:3347,http://127.0.0.1:3347"
+
+    @property
+    def ALLOWED_ORIGINS(self) -> List[str]:
+        """CORS_ORIGINS環境変数をリストに変換"""
+        origins = self.CORS_ORIGINS.split(",")
+        return [origin.strip() for origin in origins if origin.strip()]
 
     # Database
     DATABASE_URL: str = "postgresql://user:password@localhost:5434/mother_ai"

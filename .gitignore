@@ -53,3 +53,6 @@ htmlcov/
 .appgenius_temp/
 tmp/
 temp/
+
+# デプロイスクリプト（環境変数含む）
+scripts/deploy-*.sh
