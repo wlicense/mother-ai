@@ -235,7 +235,7 @@ test.describe('P-004: プロジェクト一覧・管理', () => {
    * 期待結果:
    * - 長いプロジェクト名が適切に表示される（省略または折り返し）
    */
-  test('E2E-P004-102: プロジェクト名が長い場合の表示', async ({ page }) => {
+  test.only('E2E-P004-102: プロジェクト名が長い場合の表示', async ({ page }) => {
     // 1. 承認済みユーザーでログイン
     await loginAsApprovedUser(page);
 
