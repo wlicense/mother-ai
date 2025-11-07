@@ -180,16 +180,48 @@ test.describe('P-004: プロジェクト一覧・管理', () => {
   /**
    * E2E-P004-005: 空のプロジェクト一覧表示
    *
-   * テスト対象外:
-   * - テストデータのクリーンアップが必要
-   * - 新規ユーザーの作成が必要
+   * 前提条件:
+   * - ユーザーがプロジェクトを1つも持っていない
+   *
+   * 期待結果:
+   * - 「プロジェクトがありません」メッセージ表示
+   * - 「新規プロジェクト作成」ボタンが強調表示
    */
-  test.skip('E2E-P004-005: 空のプロジェクト一覧表示', async ({ page }) => {
-    // TODO: プロジェクトを持たないユーザーでテスト
-    // 1. 新規ユーザーでログイン（プロジェクトが0個）
-    // 2. 空状態メッセージが表示されることを確認
-    // 3. 「プロジェクトがありません」メッセージ
-    // 4. 新規作成ボタンが表示されることを確認
+  test('E2E-P004-005: 空のプロジェクト一覧表示', async ({ page }) => {
+    // 1. 承認済みユーザーでログイン
+    await loginAsApprovedUser(page);
+
+    // 2. 既存のプロジェクトを全てAPI経由で削除（UI削除は29件だと時間がかかりすぎるため）
+    const token = await page.evaluate(() => localStorage.getItem('auth_token'));
+    const apiBaseUrl = 'http://localhost:8572/api/v1';
+
+    // プロジェクト一覧を取得
+    const projectsResponse = await page.request.get(`${apiBaseUrl}/projects`, {
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+    const projects = await projectsResponse.json();
+
+    // 全プロジェクトを削除
+    for (const project of projects) {
+      await page.request.delete(`${apiBaseUrl}/projects/${project.id}`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+    }
+
+    // ページをリロードして空状態を表示
+    await page.reload();
+    await page.waitForLoadState('networkidle');
+
+    // 3. 空状態メッセージが表示されることを確認
+    const emptyMessage = page.locator('[data-testid="empty-projects-message"]');
+    await expect(emptyMessage).toBeVisible({ timeout: 5000 });
+
+    // 4. 「プロジェクトがありません」メッセージが含まれることを確認
+    await expect(emptyMessage).toContainText(/プロジェクトがありません|プロジェクトがまだありません/i);
+
+    // 5. 新規プロジェクト作成ボタンが表示されることを確認
+    const createButton = page.getByRole('button', { name: /新規|作成|プロジェクト/i });
+    await expect(createButton.first()).toBeVisible();
   });
 
   /**
@@ -206,24 +238,35 @@ test.describe('P-004: プロジェクト一覧・管理', () => {
     // 1. 承認済みユーザーでログイン
     await loginAsApprovedUser(page);
 
-    // 2. 削除ボタンをクリック
+    // 2. テスト用プロジェクトを作成（削除対象として）
+    const createButton = page.getByRole('button', { name: '新規プロジェクト' });
+    await createButton.click();
+    const dialogTitle = page.getByRole('heading', { name: '新規プロジェクト作成' });
+    await expect(dialogTitle).toBeVisible({ timeout: 5000 });
+    const projectNameInput = page.getByLabel('プロジェクト名');
+    await projectNameInput.fill('削除キャンセルテスト用プロジェクト');
+    const submitButton = page.getByRole('button', { name: '作成', exact: true });
+    await submitButton.click();
+    await expect(dialogTitle).not.toBeVisible({ timeout: 5000 });
+
+    // 3. 削除ボタンをクリック
     const deleteButton = page.getByRole('button', { name: '削除' }).first();
     await deleteButton.click();
 
-    // 3. 削除確認ダイアログが表示されることを確認
+    // 4. 削除確認ダイアログが表示されることを確認
     const deleteDialog = page.getByRole('heading', { name: 'プロジェクトの削除' });
     await expect(deleteDialog).toBeVisible({ timeout: 5000 });
 
-    // 4. キャンセルボタンをクリック
+    // 5. キャンセルボタンをクリック
     const cancelButton = page.getByRole('button', { name: 'キャンセル' }).last();
     await cancelButton.click();
 
-    // 5. ダイアログが閉じられることを確認
+    // 6. ダイアログが閉じられることを確認
     await expect(deleteDialog).not.toBeVisible({ timeout: 5000 });
 
-    // 6. プロジェクトが一覧に残っていることを確認
-    const projectCards = page.locator('.MuiCard-root');
-    await expect(projectCards.first()).toBeVisible();
+    // 7. プロジェクトが一覧に残っていることを確認
+    const projectCard = page.locator('text=削除キャンセルテスト用プロジェクト');
+    await expect(projectCard).toBeVisible();
   });
 
   /**
@@ -235,7 +278,7 @@ test.describe('P-004: プロジェクト一覧・管理', () => {
    * 期待結果:
    * - 長いプロジェクト名が適切に表示される（省略または折り返し）
    */
-  test.only('E2E-P004-102: プロジェクト名が長い場合の表示', async ({ page }) => {
+  test('E2E-P004-102: プロジェクト名が長い場合の表示', async ({ page }) => {
     // 1. 承認済みユーザーでログイン
     await loginAsApprovedUser(page);
 

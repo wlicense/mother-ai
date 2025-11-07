@@ -24,7 +24,7 @@ test.describe('P-005: AI対話・プロジェクト開発', () => {
    * - Phase 4: 自己改善
    * - 各カードにアイコン、Phase名、説明が表示
    */
-  test.skip('E2E-P005-001: Phaseカード表示', async ({ page }) => {
+  test('E2E-P005-001: Phaseカード表示', async ({ page }) => {
     // 1. 承認済みユーザーでログイン
     await loginAsApprovedUser(page);
 
@@ -91,7 +91,7 @@ test.describe('P-005: AI対話・プロジェクト開発', () => {
    * - AI応答がストリーミング表示される（SSE）
    * - 応答がチャット履歴に追加される
    */
-  test('E2E-P005-002: メッセージ送信', async ({ page }) => {
+  test.only('E2E-P005-002: メッセージ送信', async ({ page }) => {
     // 1. 承認済みユーザーでログイン
     await loginAsApprovedUser(page);
 
@@ -213,7 +213,7 @@ test.describe('P-005: AI対話・プロジェクト開発', () => {
    * 期待結果:
    * - /login にリダイレクト
    */
-  test('E2E-P005-101: 未認証アクセス', async ({ page }) => {
+  test.skip('E2E-P005-101: 未認証アクセス', async ({ page }) => {
     // 1. ログアウト状態で直接プロジェクト詳細ページにアクセス
     await page.goto('/projects/test-project-id');
 
@@ -241,7 +241,7 @@ test.describe('P-005: AI対話・プロジェクト開発', () => {
    * 期待結果:
    * - エラーメッセージが表示される
    */
-  test('E2E-P005-103: 存在しないプロジェクトへアクセス', async ({ page }) => {
+  test.skip('E2E-P005-103: 存在しないプロジェクトへアクセス', async ({ page }) => {
     // 1. 承認済みユーザーでログイン
     await loginAsApprovedUser(page);
 

@@ -158,11 +158,11 @@ export async function createProject(
   await expect(dialogTitle).not.toBeVisible({ timeout: 5000 });
 
   // プロジェクトが一覧に表示されるのを確認
-  const projectCard = page.locator(`text=${projectName}`).first();
+  const projectCard = page.locator('.MuiCard-root').filter({ has: page.locator(`text=${projectName}`) }).first();
   await expect(projectCard).toBeVisible({ timeout: 5000 });
 
-  // 詳細を見るボタンをクリックしてプロジェクト詳細ページに遷移
-  const detailButton = page.getByRole('button', { name: '詳細を見る' }).first();
+  // 新しく作成したプロジェクトカード内の詳細を見るボタンをクリック
+  const detailButton = projectCard.getByRole('button', { name: '詳細を見る' });
   await detailButton.click();
 
   // URL変更を待つ（/projects/{id} に遷移）

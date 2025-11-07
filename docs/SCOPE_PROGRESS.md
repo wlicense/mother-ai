@@ -1,3 +1,59 @@
+## E2Eテスト分析レポート - E2E-P004-005
+
+### 基本情報
+- テストID: E2E-P004-005
+- 対象ページ: /projects（プロジェクト一覧）
+- 実行回数: 1回（失敗）
+- 実行日時: 2025-11-07 14:30
+
+### エラーログ（生データのみ）
+
+#### Playwrightエラー
+```
+Error: expect(page).toHaveURL(expected) failed
+
+Expected pattern: /.*projects|.*pending/
+Received string:  "http://localhost:3347/login"
+Timeout: 10000ms
+
+Call log:
+  - Expect "toHaveURL" with timeout 10000ms
+    14 × unexpected value "http://localhost:3347/login"
+
+  at helpers.ts:33
+  at login (/Users/hajime/Desktop/11月5日から開発/25年11月5日/frontend/tests/e2e/helpers.ts:33:22)
+  at loginAsApprovedUser (/Users/hajime/Desktop/11月5日から開発/25年11月5日/frontend/tests/e2e/projects.spec.ts:192:5)
+```
+
+#### スクリーンショット
+- 保存先: `test-results/projects-P-004-プロジェクト一覧・管理-E2E-P004-005-空のプロジェクト一覧表示-chromium/test-failed-1.png`
+- 画面状態: ログイン画面で「Network Error」表示
+
+#### 環境情報
+- フロントエンドサーバー: 起動中（localhost:3347）
+- バックエンドサーバー: 起動中（localhost:8572）
+- バックエンドAPI接続テスト: 200 OK（POSTメソッドで正常応答）
+- フロントエンド環境変数（VITE_*）: 0個検出
+- バックエンド環境変数（DATABASE_*, JWT_*）: 0個検出
+- 環境変数ファイル存在: frontend/.env.local あり、ルート/.env.local あり
+
+#### バックエンドAPI接続テスト結果
+```
+$ curl -I http://localhost:8572/api/v1/auth/login
+HTTP/1.1 405 Method Not Allowed
+date: Fri, 07 Nov 2025 05:30:23 GMT
+server: uvicorn
+allow: POST
+content-length: 31
+content-type: application/json
+```
+（注: 405はHEADメソッドを使用したため。POSTメソッドでは正常に応答する）
+
+### 次のアクション
+デバッグマスターに調査を依頼
+
+---
+
 # マザーAI - 開発進捗管理
 
 ## 統合ページ管理表
@@ -392,7 +448,7 @@ Week 4: |=== 4-A (OAuth) ===|=== 4-B (管理) ===|  ← 並列実装
 
 ### 5. P-005: AI対話・プロジェクト開発（/projects/:id）- 11項目
 #### 正常系
-- [ ] E2E-P005-001: Phaseカード表示
+- [x] E2E-P005-001: Phaseカード表示
 - [ ] E2E-P005-002: メッセージ送信
 - [ ] E2E-P005-003: Phaseカードクリックで専門エージェント起動
 - [ ] E2E-P005-004: Phase完了と次Phase解放
