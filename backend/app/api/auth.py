@@ -14,13 +14,13 @@ router = APIRouter()
 
 
 class LoginRequest(BaseModel):
-    email: EmailStr
+    email: str  # EmailStrだと.localドメインが拒否されるため、開発環境ではstrを使用
     password: str
 
 
 class ApplyRequest(BaseModel):
     name: str
-    email: EmailStr
+    email: str  # EmailStrだと.localドメインが拒否されるため、開発環境ではstrを使用
     password: str
     purpose: str
 
