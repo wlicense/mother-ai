@@ -174,31 +174,157 @@ test.describe('P-005: AI対話・プロジェクト開発', () => {
   /**
    * E2E-P005-005: コード生成（Phase 2）
    *
-   * テスト対象外:
-   * - コード生成機能は実装されているがE2E環境では完全なAIフローが必要
-   * - Monaco Editorとの統合が必要
+   * 前提条件:
+   * - プロジェクトが作成されている
+   * - Phase 1でコード生成が完了している
+   *
+   * 期待結果:
+   * - Phase 2カードをクリックできる
+   * - File Treeが表示される
+   * - ファイルが存在する
    */
-  test.skip('E2E-P005-005: コード生成（Phase 2）', async ({ page }) => {
-    // TODO: コード生成テストは、Monaco Editor統合後に追加
+  test('E2E-P005-005: コード生成（Phase 2）', async ({ page }) => {
+    // 1. 承認済みユーザーでログイン
+    await loginAsApprovedUser(page);
+
+    // 2. プロジェクトを作成
+    const projectId = await createProject(page, 'E2E Phase2 Code Gen Test');
+
+    // 3. プロジェクト詳細ページにアクセス
+    await page.goto(`/projects/${projectId}`);
+
+    // 4. Phase 1カードをクリックしてコード生成要求
+    const phase1Card = page.locator('.MuiCard-root').filter({ has: page.locator('text=/Phase 1/i') }).first();
+    await expect(phase1Card).toBeVisible({ timeout: 5000 });
+    await phase1Card.click();
+    await page.waitForTimeout(2000);
+
+    // 5. Phase 1でメッセージを送信してコード生成
+    const messageInput = page.locator('input[placeholder*="メッセージ"], textarea[placeholder*="メッセージ"]').first();
+    await expect(messageInput).toBeVisible({ timeout: 10000 });
+    await messageInput.fill('シンプルなTodoアプリを作成してください');
+
+    const sendButton = page.locator('button').filter({ has: page.locator('svg') }).last();
+    await sendButton.click();
+
+    // 6. コード生成完了を待機（最大30秒）
+    await page.waitForTimeout(10000);
+
+    // 7. Phase 2カードをクリック
+    const phase2Card = page.locator('.MuiCard-root').filter({ has: page.locator('text=/Phase 2/i') }).first();
+    await expect(phase2Card).toBeVisible({ timeout: 5000 });
+    await phase2Card.click();
+    await page.waitForTimeout(2000);
+
+    // 8. File Treeヘッダーが表示されることを確認
+    const fileTreeHeader = page.locator('text=ファイル').first();
+    await expect(fileTreeHeader).toBeVisible({ timeout: 10000 });
+
+    // 9. Code Editorヘッダーが表示されることを確認
+    const codeEditorHeader = page.locator('text=コードエディタ').first();
+    await expect(codeEditorHeader).toBeVisible({ timeout: 10000 });
   });
 
   /**
    * E2E-P005-006: ファイルツリー表示とコード編集
    *
-   * テスト対象外:
-   * - Monaco Editorとファイルツリー機能は未実装
+   * 前提条件:
+   * - Phase 2でFile TreeとCode Editorが表示される
+   *
+   * 期待結果:
+   * - ファイルツリーが階層構造で表示される
+   * - ファイルをクリックするとMonaco Editorで内容が表示される
+   * - コードを編集して保存できる
    */
   test.skip('E2E-P005-006: ファイルツリー表示とコード編集', async ({ page }) => {
-    // TODO: Monaco Editor実装後に追加
+    // TODO: Phase 2のFile Tree機能を完全に実装してから有効化
+    // 現在はPhase 1でコード生成してからPhase 2でFile Treeを表示する流れだが、
+    // ファイルが実際に生成されるかテストする必要がある
   });
 
   /**
-   * E2E-P005-007: プロジェクト設定変更
+   * E2E-P005-007: デプロイ機能（Phase 3）
+   *
+   * 前提条件:
+   * - プロジェクトが作成されている
+   *
+   * 期待結果:
+   * - Phase 3カードをクリックできる
+   * - デプロイメニューが表示される
+   * - Vercel/Cloud Run選択肢が表示される
+   */
+  test('E2E-P005-007: デプロイ機能（Phase 3）', async ({ page }) => {
+    // 1. 承認済みユーザーでログイン
+    await loginAsApprovedUser(page);
+
+    // 2. プロジェクトを作成
+    const projectId = await createProject(page, 'E2E Phase3 Deploy Test');
+
+    // 3. プロジェクト詳細ページにアクセス
+    await page.goto(`/projects/${projectId}`);
+
+    // 4. Phase 3カードを探す
+    const phase3Card = page.locator('.MuiCard-root').filter({ has: page.locator('text=/Phase 3/i') }).first();
+    await expect(phase3Card).toBeVisible({ timeout: 5000 });
+
+    // 5. Phase 3カードをクリック
+    await phase3Card.click();
+    await page.waitForTimeout(2000);
+
+    // 6. チャットヘッダーに「デプロイ」が表示されることを確認
+    const chatHeader = page.locator('text=/デプロイ.*AI対話/i').first();
+    await expect(chatHeader).toBeVisible({ timeout: 5000 });
+
+    // 7. メッセージ入力フィールドが表示されることを確認
+    const messageInput = page.locator('input[placeholder*="メッセージ"], textarea[placeholder*="メッセージ"]').first();
+    await expect(messageInput).toBeVisible({ timeout: 5000 });
+  });
+
+  /**
+   * E2E-P005-008: 自己改善機能（Phase 4）
+   *
+   * 前提条件:
+   * - プロジェクトが作成されている
+   *
+   * 期待結果:
+   * - Phase 4カードをクリックできる
+   * - 自己改善エージェントの説明が表示される
+   * - チャット入力が可能
+   */
+  test('E2E-P005-008: 自己改善機能（Phase 4）', async ({ page }) => {
+    // 1. 承認済みユーザーでログイン
+    await loginAsApprovedUser(page);
+
+    // 2. プロジェクトを作成
+    const projectId = await createProject(page, 'E2E Phase4 Self-Improve Test');
+
+    // 3. プロジェクト詳細ページにアクセス
+    await page.goto(`/projects/${projectId}`);
+
+    // 4. Phase 4カードを探す
+    const phase4Card = page.locator('.MuiCard-root').filter({ has: page.locator('text=/Phase 4/i') }).first();
+    await expect(phase4Card).toBeVisible({ timeout: 5000 });
+
+    // 5. Phase 4カードをクリック
+    await phase4Card.click();
+    await page.waitForTimeout(2000);
+
+    // 6. チャットヘッダーに「自己改善」が表示されることを確認
+    const chatHeader = page.locator('text=/自己改善.*AI対話/i').first();
+    await expect(chatHeader).toBeVisible({ timeout: 5000 });
+
+    // 7. メッセージ入力フィールドが表示されることを確認
+    const messageInput = page.locator('input[placeholder*="メッセージ"], textarea[placeholder*="メッセージ"]').first();
+    await expect(messageInput).toBeVisible({ timeout: 5000 });
+  });
+
+  /**
+   * E2E-P005-009: プロジェクト設定変更
    *
    * テスト対象外:
    * - プロジェクト設定UI未実装
    */
-  test.skip('E2E-P005-007: プロジェクト設定変更', async ({ page }) => {
+  test.skip('E2E-P005-009: プロジェクト設定変更', async ({ page }) => {
     // TODO: プロジェクト設定UI実装後に追加
   });
 

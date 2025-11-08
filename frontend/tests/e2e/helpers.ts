@@ -157,23 +157,32 @@ export async function createProject(
   // ダイアログが閉じられるのを待つ
   await expect(dialogTitle).not.toBeVisible({ timeout: 5000 });
 
-  // プロジェクトが一覧に表示されるのを確認
-  const projectCard = page.locator('.MuiCard-root').filter({ has: page.locator(`text=${projectName}`) }).first();
-  await expect(projectCard).toBeVisible({ timeout: 5000 });
+  // プロジェクト作成後、詳細ページに自動遷移するかチェック
+  // 詳細ページに遷移した場合は /projects/{id}、一覧ページの場合は /projects
+  await page.waitForTimeout(1000); // 遷移を待つ
 
-  // 新しく作成したプロジェクトカード内の詳細を見るボタンをクリック
-  const detailButton = projectCard.getByRole('button', { name: '詳細を見る' });
-  await detailButton.click();
+  const currentUrl = page.url();
+  let projectId: string;
 
-  // URL変更を待つ（/projects/{id} に遷移）
-  await page.waitForURL(/.*projects\/[a-zA-Z0-9-]+$/, { timeout: 10000 });
+  if (currentUrl.match(/\/projects\/[a-zA-Z0-9-]+$/)) {
+    // 詳細ページに自動遷移した場合
+    projectId = currentUrl.split('/projects/')[1];
+  } else {
+    // 一覧ページに残っている場合（旧動作）
+    // プロジェクトが一覧に表示されるのを確認
+    const projectCard = page.locator('.MuiCard-root').filter({ has: page.locator(`text=${projectName}`) }).first();
+    await expect(projectCard).toBeVisible({ timeout: 5000 });
 
-  // URLからプロジェクトIDを取得
-  const url = page.url();
-  const projectId = url.split('/projects/')[1];
+    // 新しく作成したプロジェクトカード内の詳細を見るボタンをクリック
+    const detailButton = projectCard.getByRole('button', { name: '詳細を見る' });
+    await detailButton.click();
 
-  // プロジェクト一覧ページに戻る
-  await page.goto('/projects');
+    // URL変更を待つ（/projects/{id} に遷移）
+    await page.waitForURL(/.*projects\/[a-zA-Z0-9-]+$/, { timeout: 10000 });
+
+    // URLからプロジェクトIDを取得
+    projectId = page.url().split('/projects/')[1];
+  }
 
   return projectId;
 }
