@@ -233,51 +233,123 @@ class Phase3DeploymentAgent(BaseAgent):
         """
         generated_code = task.get("generated_code", {})
         user_message = task.get("user_message", "")
-        project_name = task.get("project_name", "my-project")
+        project_context = task.get("project_context", {})
+        project_name = project_context.get("project_name", "my-project")
 
-        # TODO: Vercel/GCR APIを使用して自動デプロイ
-        # 1. GitHubリポジトリに push
-        # 2. Vercelにフロントエンドをデプロイ
-        # 3. GCRにバックエンドをデプロイ
+        # プロジェクト名を安全な形式に変換
+        safe_project_name = project_name.lower().replace(" ", "-").replace("_", "-")
 
-        # Mock deployment workflow with realistic steps
-        import hashlib
-        import time
+        # Phase 2で生成されたコードを使用（まだない場合はサンプル）
+        if not generated_code:
+            generated_code = self._get_sample_code()
 
-        # Generate unique deployment ID
-        deployment_id = hashlib.md5(f"{project_name}{time.time()}".encode()).hexdigest()[:8]
+        frontend_code = generated_code.get("frontend", {})
+        backend_code = generated_code.get("backend", {})
 
-        response = f"""デプロイを開始しました！
+        # デプロイメントサービスを使用
+        from app.services.deployment_service import get_deployment_service
+        import os
 
-**デプロイステップ:**
+        # 環境変数チェック
+        has_github_token = bool(os.getenv("GITHUB_ACCESS_TOKEN"))
+        has_vercel_token = bool(os.getenv("VERCEL_ACCESS_TOKEN"))
+        has_gcp_project = bool(os.getenv("GCP_PROJECT_ID"))
 
-1. ✅ GitHubリポジトリに push完了
-   - リポジトリ: https://github.com/your-org/{project_name}
-   - コミット: {deployment_id}
+        # APIトークンが設定されていない場合はモックレスポンス
+        if not (has_github_token and has_vercel_token and has_gcp_project):
+            return self._mock_deployment_response(safe_project_name)
 
-2. ✅ Vercelにフロントエンドをデプロイ中...
-   - ビルド完了
-   - デプロイURL: https://{project_name}-{deployment_id}.vercel.app
+        # 実際のデプロイを実行
+        try:
+            deployment_service = get_deployment_service()
+            result = await deployment_service.deploy_full_stack_app(
+                project_name=safe_project_name,
+                frontend_code=frontend_code,
+                backend_code=backend_code,
+            )
 
-3. ✅ Google Cloud Runにバックエンドをデプロイ中...
-   - Dockerイメージビルド完了
-   - デプロイURL: https://{project_name}-backend-{deployment_id}.run.app
+            if result["status"] == "success":
+                response = f"""デプロイが完了しました！ 🎉
 
-**デプロイ完了！**
+**デプロイ結果:**
 
-以下のURLからアクセスできます：
-- フロントエンド: https://{project_name}-{deployment_id}.vercel.app
-- バックエンド: https://{project_name}-backend-{deployment_id}.run.app
-- APIドキュメント: https://{project_name}-backend-{deployment_id}.run.app/docs
+1. ✅ GitHubリポジトリ作成完了
+   - リポジトリ: {result['github']['url']}
+   - コミット: {result['github']['commit'][:8]}
 
-次のステップ:
+2. ✅ Vercelにフロントエンドをデプロイ完了
+   - URL: https://{result['frontend']['url']}
+   - Deployment ID: {result['frontend']['deployment_id']}
+
+3. ✅ Google Cloud Runにバックエンドをデプロイ完了
+   - URL: {result['backend']['url']}
+   - Service: {result['backend']['service_name']}
+
+**アクセスURL:**
+- フロントエンド: https://{result['frontend']['url']}
+- バックエンド: {result['backend']['url']}
+- APIドキュメント: {result['backend']['url']}/docs
+
+**次のステップ:**
 - カスタムドメインの設定
 - 環境変数の本番用設定
 - モニタリング・ログ設定
 """
+                return {
+                    "status": "success",
+                    "response": response,
+                    "deployment_urls": {
+                        "frontend": f"https://{result['frontend']['url']}",
+                        "backend": result['backend']['url'],
+                        "api_docs": f"{result['backend']['url']}/docs",
+                        "github": result['github']['url'],
+                    },
+                }
+            else:
+                error_msg = result.get("error", "不明なエラー")
+                return {
+                    "status": "error",
+                    "response": f"デプロイに失敗しました: {error_msg}",
+                }
 
+        except Exception as e:
+            return {
+                "status": "error",
+                "response": f"デプロイ中にエラーが発生しました: {str(e)}",
+            }
+
+    def _mock_deployment_response(self, project_name: str) -> Dict[str, Any]:
+        """モックデプロイレスポンス（APIトークンが未設定の場合）"""
+        import hashlib
+        import time
+
+        deployment_id = hashlib.md5(f"{project_name}{time.time()}".encode()).hexdigest()[:8]
+
+        response = f"""デプロイをシミュレーションしました（テストモード）
+
+⚠️ **注意**: 実際のデプロイには以下の環境変数が必要です：
+- GITHUB_ACCESS_TOKEN
+- VERCEL_ACCESS_TOKEN
+- GCP_PROJECT_ID
+
+**シミュレーション結果:**
+
+1. ✅ GitHubリポジトリに push（シミュレーション）
+   - リポジトリ: https://github.com/your-org/{project_name}
+   - コミット: {deployment_id}
+
+2. ✅ Vercelにフロントエンドをデプロイ（シミュレーション）
+   - URL: https://{project_name}-{deployment_id}.vercel.app
+
+3. ✅ Google Cloud Runにバックエンドをデプロイ（シミュレーション）
+   - URL: https://{project_name}-backend-{deployment_id}.run.app
+
+**次のステップ:**
+1. 必要な環境変数を設定してください
+2. 再度デプロイを実行してください
+"""
         return {
-            "status": "success",
+            "status": "simulated",
             "response": response,
             "deployment_urls": {
                 "frontend": f"https://{project_name}-{deployment_id}.vercel.app",
@@ -285,6 +357,92 @@ class Phase3DeploymentAgent(BaseAgent):
                 "api_docs": f"https://{project_name}-backend-{deployment_id}.run.app/docs",
             },
             "deployment_id": deployment_id,
+        }
+
+    def _get_sample_code(self) -> Dict[str, Dict[str, str]]:
+        """サンプルコード（Phase 2が未実行の場合）"""
+        return {
+            "frontend": {
+                "package.json": """{
+  "name": "frontend",
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^4.3.3",
+    "vite": "^5.4.11"
+  }
+}""",
+                "index.html": """<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>My App</title>
+</head>
+<body>
+  <div id="root"></div>
+  <script type="module" src="/src/main.jsx"></script>
+</body>
+</html>""",
+                "src/main.jsx": """import React from 'react'
+import ReactDOM from 'react-dom/client'
+import App from './App'
+
+ReactDOM.createRoot(document.getElementById('root')).render(
+  <React.StrictMode>
+    <App />
+  </React.StrictMode>,
+)""",
+                "src/App.jsx": """import React from 'react'
+
+function App() {
+  return (
+    <div>
+      <h1>Hello from マザーAI!</h1>
+      <p>This app was automatically deployed.</p>
+    </div>
+  )
+}
+
+export default App""",
+            },
+            "backend": {
+                "main.py": """from fastapi import FastAPI
+
+app = FastAPI(title="My API")
+
+@app.get("/")
+async def root():
+    return {"message": "Hello from マザーAI!"}
+
+@app.get("/health")
+async def health():
+    return {"status": "healthy"}
+""",
+                "requirements.txt": """fastapi==0.115.6
+uvicorn[standard]==0.32.1
+""",
+                "Dockerfile": """FROM python:3.12-slim
+
+WORKDIR /app
+
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+COPY . .
+
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8080"]
+""",
+            }
         }
 
 
