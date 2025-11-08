@@ -1,4 +1,5 @@
-from typing import Dict, Any
+import os
+from typing import Dict, Any, List
 from app.agents.base import BaseAgent, AgentLevel
 from app.agents.claude_client import get_claude_client
 
@@ -120,21 +121,192 @@ class Phase2CodeGenerationAgent(BaseAgent):
             agent_type="code_generation",
             level=AgentLevel.WORKER
         )
+        self.claude = get_claude_client()
+
+        # システムプロンプト（プロンプトキャッシング対象）
+        self.system_prompt = """あなたは「マザーAI」の Phase 2 コード生成エージェントです。
+
+あなたの役割:
+- Phase 1で定義された要件に基づいて、完全に動作するフルスタックアプリケーションのコードを生成する
+- フロントエンド: React 18 + TypeScript + MUI v6 + Vite
+- バックエンド: FastAPI + SQLAlchemy 2.0 + PostgreSQL
+- 本番環境で即座にデプロイ可能な品質
+
+コード生成の原則:
+- TypeScript strictモード対応
+- エラーハンドリング完備
+- レスポンシブデザイン
+- セキュリティベストプラクティス（XSS、SQLインジェクション対策）
+- コメントは日本語で記述
+
+出力フォーマット:
+1. ユーザーへの説明（生成したファイルの概要）
+2. 各ファイルを以下の形式で出力:
+
+```filepath
+ファイルパス（例: frontend/src/App.tsx）
+```
+```language
+コード内容
+```
+
+必須ファイル（フロントエンド）:
+- package.json
+- tsconfig.json
+- vite.config.ts
+- index.html
+- src/main.tsx
+- src/App.tsx
+- src/pages/* （必要なページ）
+- src/components/* （必要なコンポーネント）
+
+必須ファイル（バックエンド）:
+- requirements.txt
+- main.py
+- models.py
+- routes/* （必要なルート）
+- Dockerfile"""
 
     async def execute(self, task: Dict[str, Any]) -> Dict[str, Any]:
         """
         コード生成タスクを実行
         """
+        # モックモードチェック（デフォルト: モックモード）
+        use_real_ai = os.getenv('USE_REAL_AI', 'false').lower() == 'true'
+
+        if not use_real_ai:
+            # モックモード: ダミーのコードを返す
+            project_name = task.get("project_context", {}).get("project_name", "My App")
+            return {
+                "status": "success",
+                "response": f"【モックモード】{project_name}のコードを生成しました。\n\n以下のファイルを生成しました:\n- frontend/src/App.tsx\n- frontend/src/pages/Dashboard.tsx\n- backend/main.py\n- backend/models.py",
+                "generated_code": {
+                    "frontend/src/App.tsx": "// モックコード\nimport React from 'react';\n\nfunction App() {\n  return <div>Hello World</div>;\n}\n\nexport default App;",
+                    "backend/main.py": "# モックコード\nfrom fastapi import FastAPI\n\napp = FastAPI()\n\n@app.get('/')\ndef root():\n    return {'message': 'Hello World'}"
+                }
+            }
+
+        # リアルAIモード: Claude APIを使用
         requirements = task.get("requirements", {})
         user_message = task.get("user_message", "")
+        project_context = task.get("project_context", {})
+        conversation_history = task.get("conversation_history", [])
 
-        # TODO: Claude APIを使用してコードを生成
-        # - Frontend: React + TypeScript + MUI
-        # - Backend: FastAPI + SQLAlchemy
-        # - プロンプトキャッシングでコスト削減
+        # 会話履歴から要件を抽出
+        requirements_summary = self._extract_requirements_from_history(conversation_history)
 
-        # Mock code generation with realistic structure
-        mock_files = {
+        # コード生成プロンプトを構築
+        code_generation_prompt = f"""Phase 1の要件定義に基づいて、フルスタックアプリケーションのコードを生成してください。
+
+**プロジェクト名**: {project_context.get('project_name', 'My App')}
+
+**要件サマリー**:
+{requirements_summary}
+
+**ユーザーの追加指示**:
+{user_message}
+
+上記の要件を満たす、完全に動作するアプリケーションコードを生成してください。
+フロントエンド（React + TypeScript）とバックエンド（FastAPI）の両方を含めてください。"""
+
+        # Claude APIでコード生成
+        result = await self.claude.generate_text(
+            messages=[{"role": "user", "content": code_generation_prompt}],
+            system_prompt=self.system_prompt,
+            max_tokens=4096,
+            temperature=0.3,  # コード生成なので低めの温度
+            use_cache=True
+        )
+
+        if "error" in result:
+            return {
+                "status": "error",
+                "response": f"コード生成エラー: {result['error']}",
+                "generated_code": {},
+            }
+
+        # 生成されたコードをパース
+        response_text = result["content"]
+        generated_files = self._parse_generated_code(response_text)
+
+        # ファイルが生成されなかった場合はモックコードを使用
+        if not generated_files or len(generated_files.get("frontend", {})) == 0:
+            generated_files = self._get_mock_files()
+            response_text = "コードを生成しました！（Claude APIからの応答をパースできなかったため、サンプルコードを使用しています）\n\n" + response_text
+
+        # ファイル数をカウント
+        file_count = sum(len(files) for files in generated_files.values())
+
+        return {
+            "status": "success",
+            "response": response_text,
+            "generated_code": generated_files,
+            "file_count": file_count,
+            "usage": result.get("usage", {}),
+            "cost": self.claude.estimate_cost(result.get("usage", {})),
+        }
+
+    def _extract_requirements_from_history(self, conversation_history: List[Dict[str, str]]) -> str:
+        """会話履歴から要件を抽出してサマリーを作成"""
+        if not conversation_history:
+            return "要件定義がまだ完了していません。Phase 1で要件を定義してください。"
+
+        # 会話履歴をテキストに変換
+        summary_parts = []
+        for msg in conversation_history[-10:]:  # 最新10件のみ
+            role = msg.get("role", "user")
+            content = msg.get("content", "")
+            if role == "user":
+                summary_parts.append(f"- {content}")
+
+        if summary_parts:
+            return "\n".join(summary_parts)
+        else:
+            return "ユーザーが作りたいアプリケーションについて説明してください。"
+
+    def _parse_generated_code(self, response_text: str) -> Dict[str, Dict[str, str]]:
+        """
+        Claude APIの応答からコードを抽出
+
+        期待される形式:
+        ```filepath
+        frontend/src/App.tsx
+        ```
+        ```typescript
+        コード内容
+        ```
+        """
+        import re
+
+        files = {"frontend": {}, "backend": {}}
+
+        # ファイルパスとコードブロックを抽出
+        pattern = r'```filepath\s*\n(.+?)\s*\n```\s*\n```(\w+)\s*\n(.+?)\n```'
+        matches = re.findall(pattern, response_text, re.DOTALL)
+
+        for filepath, language, code in matches:
+            filepath = filepath.strip()
+            code = code.strip()
+
+            # フロントエンドかバックエンドか判定
+            if filepath.startswith("frontend/"):
+                clean_path = filepath.replace("frontend/", "")
+                files["frontend"][clean_path] = code
+            elif filepath.startswith("backend/"):
+                clean_path = filepath.replace("backend/", "")
+                files["backend"][clean_path] = code
+            else:
+                # プレフィックスがない場合、拡張子で判定
+                if any(filepath.endswith(ext) for ext in [".tsx", ".ts", ".jsx", ".js", ".html", ".json"]):
+                    files["frontend"][filepath] = code
+                else:
+                    files["backend"][filepath] = code
+
+        return files
+
+    def _get_mock_files(self) -> Dict[str, Dict[str, str]]:
+        """モックファイル（パース失敗時のフォールバック）"""
+        return {
             "frontend": {
                 "src/App.tsx": """import React from 'react';
 import { ThemeProvider } from '@mui/material';
@@ -191,33 +363,11 @@ class Item(Base):
             }
         }
 
-        response = """コードを生成しました！
-
-**生成されたファイル:**
-
-**フロントエンド (React + TypeScript + MUI)**
-- src/App.tsx: メインコンポーネント
-- src/components/Header.tsx: ヘッダーコンポーネント
-- package.json: 依存関係定義
-
-**バックエンド (FastAPI + SQLAlchemy)**
-- main.py: FastAPIアプリケーション
-- models.py: データベースモデル
-
-コードエディタでファイルを確認してください。必要に応じて修正できます。"""
-
-        return {
-            "status": "success",
-            "response": response,
-            "generated_code": mock_files,
-            "file_count": sum(len(files) for files in mock_files.values()),
-        }
-
 
 class Phase3DeploymentAgent(BaseAgent):
     """
     Phase 3: デプロイエージェント
-    生成されたコードをVercel + GCRへ自動デプロイ
+    デプロイスクリプトを生成してユーザーに提供
     """
 
     def __init__(self):
@@ -226,11 +376,63 @@ class Phase3DeploymentAgent(BaseAgent):
             agent_type="deployment",
             level=AgentLevel.WORKER
         )
+        self.claude = get_claude_client()
+
+        # システムプロンプト
+        self.system_prompt = """あなたは「マザーAI」の Phase 3 デプロイエージェントです。
+
+あなたの役割:
+- Phase 2で生成されたコードを本番環境にデプロイするためのスクリプトを生成する
+- フロントエンド: Vercel
+- バックエンド: Google Cloud Run
+- データベース: Supabase/Neon PostgreSQL
+
+生成するスクリプト:
+1. **deploy.sh**: メインデプロイスクリプト
+2. **vercel.json**: Vercel設定ファイル
+3. **Dockerfile**: Cloud Run用Dockerファイル
+4. **.env.production.template**: 環境変数テンプレート
+5. **README_DEPLOY.md**: デプロイ手順書
+
+スクリプトの要件:
+- シェルスクリプトは`#!/bin/bash`で開始
+- エラーハンドリング（set -e）必須
+- 環境変数チェック
+- わかりやすいログ出力
+- ロールバック手順も記載
+
+出力フォーマット:
+各ファイルを以下の形式で出力:
+
+```filepath
+ファイルパス（例: deploy.sh）
+```
+```language
+ファイル内容
+```
+
+日本語でわかりやすく説明してください。"""
 
     async def execute(self, task: Dict[str, Any]) -> Dict[str, Any]:
         """
-        デプロイタスクを実行
+        デプロイスクリプトを生成
         """
+        # モックモードチェック（デフォルト: モックモード）
+        use_real_ai = os.getenv('USE_REAL_AI', 'false').lower() == 'true'
+
+        if not use_real_ai:
+            # モックモード: ダミーのデプロイスクリプトを返す
+            project_name = task.get("project_context", {}).get("project_name", "my-project")
+            return {
+                "status": "success",
+                "response": f"【モックモード】{project_name}のデプロイスクリプトを生成しました。\n\n以下のファイルを生成しました:\n- deploy.sh\n- vercel.json\n- Dockerfile",
+                "deployment_scripts": {
+                    "deploy.sh": "#!/bin/bash\n# モックデプロイスクリプト\necho 'Deploying to production...'\nvercel deploy --prod\ngcloud run deploy",
+                    "vercel.json": "{\n  \"version\": 2,\n  \"builds\": [{\n    \"src\": \"package.json\",\n    \"use\": \"@vercel/static-build\"\n  }]\n}"
+                }
+            }
+
+        # リアルAIモード: Claude APIを使用
         generated_code = task.get("generated_code", {})
         user_message = task.get("user_message", "")
         project_context = task.get("project_context", {})
@@ -239,84 +441,71 @@ class Phase3DeploymentAgent(BaseAgent):
         # プロジェクト名を安全な形式に変換
         safe_project_name = project_name.lower().replace(" ", "-").replace("_", "-")
 
-        # Phase 2で生成されたコードを使用（まだない場合はサンプル）
-        if not generated_code:
-            generated_code = self._get_sample_code()
+        # Phase 2で生成されたコードのサマリーを作成
+        frontend_files = generated_code.get("frontend", {})
+        backend_files = generated_code.get("backend", {})
+        code_summary = f"""フロントエンド: {len(frontend_files)}ファイル
+バックエンド: {len(backend_files)}ファイル"""
 
-        frontend_code = generated_code.get("frontend", {})
-        backend_code = generated_code.get("backend", {})
+        # デプロイスクリプト生成プロンプト
+        deployment_prompt = f"""プロジェクト「{project_name}」のデプロイスクリプトを生成してください。
 
-        # デプロイメントサービスを使用
-        from app.services.deployment_service import get_deployment_service
-        import os
+**プロジェクト情報:**
+- プロジェクト名: {project_name}
+- 安全な名前: {safe_project_name}
+- 生成されたコード: {code_summary}
 
-        # 環境変数チェック
-        has_github_token = bool(os.getenv("GITHUB_ACCESS_TOKEN"))
-        has_vercel_token = bool(os.getenv("VERCEL_ACCESS_TOKEN"))
-        has_gcp_project = bool(os.getenv("GCP_PROJECT_ID"))
+**ユーザーの指示:**
+{user_message if user_message else "標準的なデプロイスクリプトを生成してください"}
 
-        # APIトークンが設定されていない場合はモックレスポンス
-        if not (has_github_token and has_vercel_token and has_gcp_project):
-            return self._mock_deployment_response(safe_project_name)
+以下を生成してください:
+1. deploy.sh: Vercel + Cloud Runへのデプロイスクリプト
+2. vercel.json: Vercel設定
+3. Dockerfile: Cloud Run用
+4. .env.production.template: 環境変数テンプレート
+5. README_DEPLOY.md: デプロイ手順書（日本語）"""
 
-        # 実際のデプロイを実行
-        try:
-            deployment_service = get_deployment_service()
-            result = await deployment_service.deploy_full_stack_app(
-                project_name=safe_project_name,
-                frontend_code=frontend_code,
-                backend_code=backend_code,
-            )
+        # Claude APIでデプロイスクリプト生成
+        result = await self.claude.generate_text(
+            messages=[{"role": "user", "content": deployment_prompt}],
+            system_prompt=self.system_prompt,
+            max_tokens=4096,
+            temperature=0.2,
+            use_cache=True
+        )
 
-            if result["status"] == "success":
-                response = f"""デプロイが完了しました！ 🎉
-
-**デプロイ結果:**
-
-1. ✅ GitHubリポジトリ作成完了
-   - リポジトリ: {result['github']['url']}
-   - コミット: {result['github']['commit'][:8]}
-
-2. ✅ Vercelにフロントエンドをデプロイ完了
-   - URL: https://{result['frontend']['url']}
-   - Deployment ID: {result['frontend']['deployment_id']}
-
-3. ✅ Google Cloud Runにバックエンドをデプロイ完了
-   - URL: {result['backend']['url']}
-   - Service: {result['backend']['service_name']}
-
-**アクセスURL:**
-- フロントエンド: https://{result['frontend']['url']}
-- バックエンド: {result['backend']['url']}
-- APIドキュメント: {result['backend']['url']}/docs
-
-**次のステップ:**
-- カスタムドメインの設定
-- 環境変数の本番用設定
-- モニタリング・ログ設定
-"""
-                return {
-                    "status": "success",
-                    "response": response,
-                    "deployment_urls": {
-                        "frontend": f"https://{result['frontend']['url']}",
-                        "backend": result['backend']['url'],
-                        "api_docs": f"{result['backend']['url']}/docs",
-                        "github": result['github']['url'],
-                    },
-                }
-            else:
-                error_msg = result.get("error", "不明なエラー")
-                return {
-                    "status": "error",
-                    "response": f"デプロイに失敗しました: {error_msg}",
-                }
-
-        except Exception as e:
+        if "error" in result:
             return {
                 "status": "error",
-                "response": f"デプロイ中にエラーが発生しました: {str(e)}",
+                "response": f"デプロイスクリプト生成エラー: {result['error']}",
             }
+
+        response_text = result["content"]
+
+        # 生成されたスクリプトをパース（Phase 2と同じロジック）
+        deployment_files = self._parse_deployment_scripts(response_text)
+
+        return {
+            "status": "success",
+            "response": response_text,
+            "deployment_scripts": deployment_files,
+            "script_count": len(deployment_files),
+            "usage": result.get("usage", {}),
+            "cost": self.claude.estimate_cost(result.get("usage", {})),
+        }
+
+    def _parse_deployment_scripts(self, response_text: str) -> Dict[str, str]:
+        """デプロイスクリプトをパース"""
+        import re
+
+        scripts = {}
+        pattern = r'```filepath\s*\n(.+?)\s*\n```\s*\n```(\w+)\s*\n(.+?)\n```'
+        matches = re.findall(pattern, response_text, re.DOTALL)
+
+        for filepath, language, content in matches:
+            scripts[filepath.strip()] = content.strip()
+
+        return scripts
 
     def _mock_deployment_response(self, project_name: str) -> Dict[str, Any]:
         """モックデプロイレスポンス（APIトークンが未設定の場合）"""
@@ -458,177 +647,131 @@ class Phase4SelfImprovementAgent(BaseAgent):
             agent_type="self_improvement",
             level=AgentLevel.WORKER
         )
+        self.claude = get_claude_client()
+
+        # システムプロンプト
+        self.system_prompt = """あなたは「マザーAI」の Phase 4 自己改善エージェントです。
+
+あなたの役割:
+- マザーAI自身のコードやシステムを分析して改善提案を行う
+- パフォーマンス、機能追加、バグ修正、セキュリティなど多角的に分析
+- 実装可能な具体的な改善案を提示
+- セキュリティリスクを評価
+
+改善の種類:
+1. **パフォーマンス改善**: 速度、メモリ、リソース使用量の最適化
+2. **機能追加**: 新しいPhase、ツール、統合の提案
+3. **バグ修正**: 既知の問題の特定と修正案
+4. **セキュリティ強化**: 脆弱性対策、暗号化、認証の改善
+5. **UX改善**: ユーザーインターフェースの使いやすさ向上
+
+出力フォーマット:
+1. **現状分析**: 現在の状態を評価
+2. **改善提案**: 具体的な改善案（優先度付き）
+3. **セキュリティスキャン**: 提案による影響評価
+4. **実装計画**: 必要な工数と手順
+5. **承認確認**: ユーザーに承認を求める
+
+日本語でわかりやすく説明してください。"""
 
     async def execute(self, task: Dict[str, Any]) -> Dict[str, Any]:
         """
         自己改善タスクを実行
         """
+        # モックモードチェック（デフォルト: モックモード）
+        use_real_ai = os.getenv('USE_REAL_AI', 'false').lower() == 'true'
+
+        if not use_real_ai:
+            # モックモード: ダミーの改善提案を返す
+            return {
+                "status": "success",
+                "response": "【モックモード】マザーAIの改善案を分析しました。\n\n## 改善提案\n\n### 1. パフォーマンス最適化\n- データベースクエリのN+1問題を解決\n- React.memoの活用でレンダリング最適化\n\n### 2. 新機能追加\n- Phase 5: テスト自動生成エージェント\n- チーム協業機能\n\n### 3. セキュリティ強化\n- API レート制限の実装\n- HTTPS強制の確認",
+                "improvements": [
+                    {
+                        "type": "performance",
+                        "title": "データベースクエリの最適化",
+                        "description": "N+1問題を解決してクエリ数を削減",
+                        "priority": "high"
+                    },
+                    {
+                        "type": "feature",
+                        "title": "Phase 5追加",
+                        "description": "テスト自動生成エージェントの実装",
+                        "priority": "medium"
+                    }
+                ]
+            }
+
+        # リアルAIモード: Claude APIを使用
         improvement_request = task.get("improvement_request", "")
         user_message = task.get("user_message", "")
+        project_context = task.get("project_context", {})
 
-        # TODO: マザーAIの改善を実行
-        # 1. セキュリティスキャン
-        # 2. サンドボックステスト
-        # 3. 人間の承認待ち
-        # 4. 本番環境に反映
+        # 改善提案生成プロンプト
+        improvement_prompt = f"""マザーAI自身の改善について分析してください。
 
-        # Mock self-improvement proposals with realistic analysis
+**ユーザーのリクエスト:**
+{user_message}
+
+**プロジェクトコンテキスト:**
+{improvement_request if improvement_request else '特定の要件なし'}
+
+マザーAIの改善案を分析して提示してください。以下の観点から評価してください：
+- パフォーマンス最適化
+- 新機能追加
+- バグ修正
+- セキュリティ強化
+- UX改善
+
+具体的な実装案と予想される効果を示してください。"""
+
+        # Claude APIで改善提案を生成
+        result = await self.claude.generate_text(
+            messages=[{"role": "user", "content": improvement_prompt}],
+            system_prompt=self.system_prompt,
+            max_tokens=3072,
+            temperature=0.5,
+            use_cache=True
+        )
+
+        if "error" in result:
+            return {
+                "status": "error",
+                "response": f"改善提案生成エラー: {result['error']}",
+            }
+
+        response_text = result["content"]
+
+        # 改善タイプを推定（キーワードベース）
+        improvement_type = self._estimate_improvement_type(user_message)
+
+        return {
+            "status": "pending_approval",
+            "response": response_text,
+            "improvement_type": improvement_type,
+            "usage": result.get("usage", {}),
+            "cost": self.claude.estimate_cost(result.get("usage", {})),
+        }
+
+    def _estimate_improvement_type(self, user_message: str) -> str:
+        """ユーザーメッセージから改善タイプを推定"""
         keywords_performance = ["遅い", "重い", "パフォーマンス", "速度", "performance", "slow"]
         keywords_feature = ["機能", "追加", "新しい", "feature", "add"]
         keywords_bug = ["バグ", "エラー", "不具合", "bug", "error", "fix"]
+        keywords_security = ["セキュリティ", "脆弱性", "security", "vulnerability"]
 
-        improvement_type = "general"
-        if any(kw in user_message.lower() for kw in keywords_performance):
-            improvement_type = "performance"
-        elif any(kw in user_message.lower() for kw in keywords_feature):
-            improvement_type = "feature"
-        elif any(kw in user_message.lower() for kw in keywords_bug):
-            improvement_type = "bug_fix"
+        msg_lower = user_message.lower()
 
-        if improvement_type == "performance":
-            response = """パフォーマンス改善の提案を分析しました。
-
-**現状分析:**
-- フロントエンド: 初回ロード時間 2.5秒
-- バックエンド: API平均応答時間 350ms
-- データベース: クエリ実行時間 120ms
-
-**改善提案:**
-
-1. **フロントエンド最適化**
-   - React.lazy()による遅延ロード導入
-   - 画像の最適化（WebP形式、lazy loading）
-   - バンドルサイズ削減（Tree Shaking）
-
-   **予想効果**: 初回ロード時間 40%削減
-
-2. **バックエンド最適化**
-   - データベースクエリのキャッシング（Redis）
-   - N+1問題の解決
-   - 非同期処理の拡充
-
-   **予想効果**: API応答時間 30%削減
-
-3. **セキュリティスキャン**
-   ✅ 脆弱性チェック完了
-   ✅ OWASP Top 10対策確認
-   ✅ APIキー暗号化確認
-
-**実装計画:**
-- サンドボックス環境でテスト: 2日
-- 人間の承認待ち: 1日
-- 本番環境へのデプロイ: 1日
-
-承認されますか？"""
-            proposed_changes = {
-                "frontend": ["React.lazy導入", "画像最適化", "バンドルサイズ削減"],
-                "backend": ["Redis導入", "クエリ最適化", "非同期処理拡充"],
-                "estimated_days": 4,
-            }
-        elif improvement_type == "feature":
-            response = """新機能追加の提案を分析しました。
-
-**提案機能:**
-- Phase 5-10の追加（マザーAI自身が設計）
-- チーム協業機能
-- リアルタイム通知システム
-- モバイルアプリ対応
-
-**優先度評価:**
-
-1. **Phase 5-10追加** (優先度: 高)
-   - ユーザーフィードバックで最も要望が多い
-   - 既存アーキテクチャと互換性あり
-   - 実装工数: 10日
-
-2. **チーム協業機能** (優先度: 中)
-   - エンタープライズ利用に必須
-   - リアルタイム通信の追加が必要
-   - 実装工数: 7日
-
-3. **リアルタイム通知** (優先度: 中)
-   - UX向上に貢献
-   - WebSocket実装が必要
-   - 実装工数: 3日
-
-**セキュリティスキャン:**
-✅ 新機能による脆弱性なし
-✅ 既存機能への影響なし
-
-**実装計画:**
-Phase 5-10を最優先で実装することを推奨します。
-
-承認されますか？"""
-            proposed_changes = {
-                "new_phases": ["Phase 5", "Phase 6", "Phase 7", "Phase 8", "Phase 9", "Phase 10"],
-                "estimated_days": 10,
-                "priority": "high",
-            }
-        elif improvement_type == "bug_fix":
-            response = """バグ修正の提案を分析しました。
-
-**検出されたバグ:**
-
-1. **重要度: 高**
-   - helpers.ts loginAsApprovedUser()関数の401エラー
-   - 影響: E2E-P005-001テスト失敗
-   - 修正方針: ヘルパー関数のトークン処理を修正
-
-2. **重要度: 中**
-   - Phase遷移時のメモリリーク
-   - 影響: 長時間使用時のパフォーマンス低下
-   - 修正方針: useEffect cleanup関数の追加
-
-3. **重要度: 低**
-   - ファイルツリーの展開状態がリセットされる
-   - 影響: UX低下
-   - 修正方針: LocalStorageで状態保存
-
-**セキュリティスキャン:**
-✅ セキュリティ上の脆弱性なし
-✅ データ損失のリスクなし
-
-**実装計画:**
-- サンドボックステスト: 1日
-- 本番環境デプロイ: 即日可能
-
-承認されますか？"""
-            proposed_changes = {
-                "bugs": [
-                    {"severity": "high", "issue": "helpers.ts login function"},
-                    {"severity": "medium", "issue": "Phase transition memory leak"},
-                    {"severity": "low", "issue": "FileTree expansion state"},
-                ],
-                "estimated_days": 2,
-            }
+        if any(kw in msg_lower for kw in keywords_performance):
+            return "performance"
+        elif any(kw in msg_lower for kw in keywords_feature):
+            return "feature"
+        elif any(kw in msg_lower for kw in keywords_bug):
+            return "bug_fix"
+        elif any(kw in msg_lower for kw in keywords_security):
+            return "security"
         else:
-            response = """自己改善の提案を分析しています。
-
-マザーAI自身の改善について、以下の観点から分析します：
-
-**改善候補領域:**
-1. **パフォーマンス**: 応答速度、リソース使用量
-2. **機能追加**: 新しいPhase、ツール、統合
-3. **バグ修正**: 既知の問題の解決
-4. **セキュリティ**: 脆弱性対策、暗号化強化
-5. **UX改善**: ユーザーインターフェース、使いやすさ
-
-具体的な改善内容を教えてください。例：
-- "パフォーマンスを改善したい"
-- "新機能を追加したい"
-- "バグを修正したい"
-"""
-            proposed_changes = {
-                "status": "awaiting_details",
-                "available_improvements": ["performance", "feature", "bug_fix", "security", "ux"],
-            }
-
-        return {
-            "status": "pending_approval" if improvement_type != "general" else "awaiting_input",
-            "response": response,
-            "proposed_changes": proposed_changes,
-            "improvement_type": improvement_type,
-        }
+            return "general"
 
 
 class OrchestratorAgent(BaseAgent):
