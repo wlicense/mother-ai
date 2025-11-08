@@ -32,7 +32,7 @@ class SendMessageRequest(BaseModel):
     phase: int
 
 
-@router.get("/", response_model=List[ProjectResponse])
+@router.get("", response_model=List[ProjectResponse])
 async def get_projects(
     current_user: User = Depends(get_current_approved_user),
     db: Session = Depends(get_db)
@@ -55,7 +55,7 @@ async def get_projects(
     ]
 
 
-@router.post("/", response_model=ProjectResponse)
+@router.post("", response_model=ProjectResponse)
 async def create_project(
     request: CreateProjectRequest,
     current_user: User = Depends(get_current_approved_user),

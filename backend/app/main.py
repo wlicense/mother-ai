@@ -23,6 +23,7 @@ app = FastAPI(
     description="AI駆動開発プラットフォーム",
     version="0.1.0",
     lifespan=lifespan,
+    redirect_slashes=False,  # 末尾スラッシュの自動リダイレクトを無効化
 )
 
 # Session middleware for OAuth (必ずCORSの前に追加)
