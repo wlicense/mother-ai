@@ -406,12 +406,12 @@ Function Calling:
 ## 本番環境デプロイ情報
 
 ```yaml
-デプロイ日: 2025-11-07
+デプロイ日: 2025-11-08（最新）
 環境構成: シンプル構成（開発DB + 本番環境）
 
 本番URL:
-  Frontend: https://frontend-gmfijpenn-wlicenses-projects.vercel.app
-  Backend: https://mother-ai-backend-rs5b3xb4za-an.a.run.app
+  Frontend: https://frontend-7b8pescz6-wlicenses-projects.vercel.app
+  Backend: https://mother-ai-backend-735112328456.asia-northeast1.run.app
 
 インフラ:
   Frontend: Vercel（無料枠）
@@ -419,15 +419,16 @@ Function Calling:
   Database: Supabase PostgreSQL（開発環境を共有）
 
 重要な注記:
+  - API URLパスの二重化問題を修正（/api/v1 が二重になっていた）
+  - CORS設定を最新のフロントエンドURLに更新
+  - VITE_API_BASE_URLからパスを削除（axios.tsで自動追加するため）
   - CrewAIは一旦コメントアウト（ビルド時間短縮のため）
   - エージェント機能は後で追加予定
-  - CORS設定済み
-  - 環境変数は全て設定済み
 ```
 
 ---
 
 **作成日**: 2025年11月5日
-**最終更新**: 2025年11月07日
-**バージョン**: 1.1
-**プロジェクトステータス**: 本番環境デプロイ完了
+**最終更新**: 2025年11月08日
+**バージョン**: 1.2
+**プロジェクトステータス**: 本番環境デプロイ完了・動作検証中
