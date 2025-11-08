@@ -5,7 +5,7 @@ const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8572
 
 // Axiosインスタンス作成
 export const apiClient = axios.create({
-  baseURL: API_BASE_URL,
+  baseURL: `${API_BASE_URL}/api/v1`,
   timeout: 30000, // 30秒（SSEストリーミング考慮）
   headers: {
     'Content-Type': 'application/json',
@@ -78,7 +78,7 @@ apiClient.interceptors.response.use(
 // SSEストリーミング用のEventSource作成ヘルパー
 export const createEventSource = (url: string): EventSource => {
   const token = localStorage.getItem('auth_token');
-  const fullUrl = `${API_BASE_URL}${url}`;
+  const fullUrl = `${API_BASE_URL}/api/v1${url}`;
 
   // EventSourceはヘッダーを設定できないため、トークンをクエリパラメータで渡す
   // 注: セキュリティ上の理由から、本番環境ではより安全な方法を検討すること

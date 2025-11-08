@@ -89,8 +89,8 @@ export const isAdmin = (): boolean => {
  */
 export const loginWithGoogle = (): void => {
   // バックエンドのGoogle OAuth URLにリダイレクト
-  const backendUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8572/api/v1';
-  window.location.href = `${backendUrl}/auth/oauth/google`;
+  const backendUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8572';
+  window.location.href = `${backendUrl}/api/v1/auth/oauth/google`;
 };
 
 /**
@@ -98,8 +98,8 @@ export const loginWithGoogle = (): void => {
  */
 export const loginWithGitHub = (): void => {
   // バックエンドのGitHub OAuth URLにリダイレクト
-  const backendUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8572/api/v1';
-  window.location.href = `${backendUrl}/auth/oauth/github`;
+  const backendUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8572';
+  window.location.href = `${backendUrl}/api/v1/auth/oauth/github`;
 };
 
 /**
