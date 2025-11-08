@@ -22,11 +22,21 @@ import CodeIcon from '@mui/icons-material/Code'
 import DescriptionIcon from '@mui/icons-material/Description'
 import RocketLaunchIcon from '@mui/icons-material/RocketLaunch'
 import AutoFixHighIcon from '@mui/icons-material/AutoFixHigh'
+import BugReportIcon from '@mui/icons-material/BugReport'
+import ArticleIcon from '@mui/icons-material/Article'
+import BuildIcon from '@mui/icons-material/Build'
+import SpeedIcon from '@mui/icons-material/Speed'
+import SecurityIcon from '@mui/icons-material/Security'
+import StorageIcon from '@mui/icons-material/Storage'
+import ApiIcon from '@mui/icons-material/Api'
+import PaletteIcon from '@mui/icons-material/Palette'
+import RefreshIcon from '@mui/icons-material/Refresh'
+import MonitorHeartIcon from '@mui/icons-material/MonitorHeart'
 import { useProject, useSendMessage, useProjectFile, useProjectFiles, useSaveFile } from '../../hooks/useProjects'
 import CodeEditor from '../../components/CodeEditor'
 import FileTree, { FileNode } from '../../components/FileTree'
 
-// Phase定義
+// Phase定義（Phase 1-14）
 const phases = [
   {
     id: 1,
@@ -59,6 +69,86 @@ const phases = [
     description: 'フィードバックを元に改善',
     icon: <AutoFixHighIcon />,
     color: '#ed6c02',
+  },
+  {
+    id: 5,
+    name: 'Phase 5',
+    title: 'テスト生成',
+    description: '自動テストコードを生成',
+    icon: <BugReportIcon />,
+    color: '#f44336',
+  },
+  {
+    id: 6,
+    name: 'Phase 6',
+    title: 'ドキュメント',
+    description: 'APIドキュメントを自動生成',
+    icon: <ArticleIcon />,
+    color: '#00897b',
+  },
+  {
+    id: 7,
+    name: 'Phase 7',
+    title: 'デバッグ支援',
+    description: 'バグの自動検出と修正提案',
+    icon: <BuildIcon />,
+    color: '#ff9800',
+  },
+  {
+    id: 8,
+    name: 'Phase 8',
+    title: 'パフォーマンス',
+    description: 'パフォーマンス最適化を提案',
+    icon: <SpeedIcon />,
+    color: '#00bcd4',
+  },
+  {
+    id: 9,
+    name: 'Phase 9',
+    title: 'セキュリティ',
+    description: 'セキュリティ監査と脆弱性検出',
+    icon: <SecurityIcon />,
+    color: '#d32f2f',
+  },
+  {
+    id: 10,
+    name: 'Phase 10',
+    title: 'DB設計',
+    description: 'データベース設計の最適化',
+    icon: <StorageIcon />,
+    color: '#5c6bc0',
+  },
+  {
+    id: 11,
+    name: 'Phase 11',
+    title: 'API設計',
+    description: 'REST API設計のベストプラクティス',
+    icon: <ApiIcon />,
+    color: '#26a69a',
+  },
+  {
+    id: 12,
+    name: 'Phase 12',
+    title: 'UX/UIレビュー',
+    description: 'ユーザー体験の改善提案',
+    icon: <PaletteIcon />,
+    color: '#ec407a',
+  },
+  {
+    id: 13,
+    name: 'Phase 13',
+    title: 'リファクタリング',
+    description: 'コード品質の向上',
+    icon: <RefreshIcon />,
+    color: '#7e57c2',
+  },
+  {
+    id: 14,
+    name: 'Phase 14',
+    title: 'モニタリング',
+    description: '運用監視とアラート設定',
+    icon: <MonitorHeartIcon />,
+    color: '#66bb6a',
   },
 ]
 
@@ -313,7 +403,7 @@ export default function ProjectDetailPage() {
           {phases.map((phase) => {
             const status = getPhaseStatus(phase.id)
             return (
-              <Grid item xs={12} sm={6} md={3} key={phase.id}>
+              <Grid item xs={12} sm={6} md={4} lg={3} key={phase.id}>
                 <Card
                   sx={{
                     border: selectedPhase === phase.id ? 2 : 0,

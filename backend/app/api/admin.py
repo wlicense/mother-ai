@@ -212,6 +212,48 @@ async def get_api_stats(
         for row in top_users_query
     ]
 
+    # Phase別統計（Phase 1-14）
+    phase_stats_query = db.query(
+        ApiLog.phase,
+        func.count(ApiLog.id).label('total_requests'),
+        func.sum(ApiLog.cost).label('total_cost'),
+        func.sum(ApiLog.total_tokens).label('total_tokens')
+    ).filter(ApiLog.phase.isnot(None))\
+     .group_by(ApiLog.phase)\
+     .order_by(ApiLog.phase)\
+     .all()
+
+    phase_stats = [
+        {
+            "phase": row.phase,
+            "total_requests": row.total_requests,
+            "total_cost": float(row.total_cost) if row.total_cost else 0.0,
+            "total_tokens": int(row.total_tokens) if row.total_tokens else 0,
+        }
+        for row in phase_stats_query
+    ]
+
+    # Phase別の詳細統計（今日のデータ）
+    today_phase_stats_query = db.query(
+        ApiLog.phase,
+        func.count(ApiLog.id).label('requests'),
+        func.sum(ApiLog.cost).label('cost')
+    ).filter(
+        ApiLog.phase.isnot(None),
+        ApiLog.created_at >= today_start
+    ).group_by(ApiLog.phase)\
+     .order_by(ApiLog.phase)\
+     .all()
+
+    today_phase_stats = [
+        {
+            "phase": row.phase,
+            "requests": row.requests,
+            "cost": float(row.cost) if row.cost else 0.0,
+        }
+        for row in today_phase_stats_query
+    ]
+
     return {
         "total_requests": total_requests,
         "total_cost": float(total_cost) if total_cost else 0.0,
@@ -219,4 +261,6 @@ async def get_api_stats(
         "today_requests": today_requests,
         "today_cost": float(today_cost) if today_cost else 0.0,
         "top_users": top_users,
+        "phase_stats": phase_stats,
+        "today_phase_stats": today_phase_stats,
     }

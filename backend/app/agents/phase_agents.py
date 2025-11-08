@@ -48,8 +48,55 @@ class Phase1RequirementsAgent(BaseAgent):
         """
         要件定義タスクを実行
         """
+        # モックモードチェック
+        use_real_ai = os.getenv('USE_REAL_AI', 'false').lower() == 'true'
+
         user_message = task.get("user_message", "")
         project_context = task.get("project_context", {})
+
+        if not use_real_ai:
+            # モックモード: テンプレートベースで要件定義
+            # プロジェクトタイプを推定
+            project_type = "general"
+            if any(kw in user_message.lower() for kw in ["ec", "ecommerce", "ショップ", "通販"]):
+                project_type = "ecommerce"
+            elif any(kw in user_message.lower() for kw in ["sns", "ソーシャル", "コミュニティ"]):
+                project_type = "social"
+            elif any(kw in user_message.lower() for kw in ["dashboard", "ダッシュボード", "管理", "管理画面"]):
+                project_type = "dashboard"
+
+            response_message = f"""✅ **プロジェクトの要件をヒアリングさせていただきます！**
+
+## 現在の理解
+
+**プロジェクトタイプ**: {project_type}
+**ユーザーのリクエスト**: {user_message}
+
+## 次のステップ
+
+以下の情報を教えていただけますか？
+
+1. **主な機能**: どのような機能が必要ですか？
+2. **ターゲットユーザー**: 誰が使いますか？
+3. **技術的要件**: 特定の技術スタックや統合が必要ですか？
+
+---
+*この要件定義は「マザーAI」Phase 1エージェントによって実施されています。*
+"""
+
+            requirements = {
+                "project_type": project_type,
+                "features": [],
+                "context": project_context,
+            }
+
+            return {
+                "status": "success",
+                "response": response_message,
+                "requirements": requirements,
+            }
+
+        # リアルAIモード: Claude API使用
         conversation_history = task.get("conversation_history", [])
 
         # 会話履歴を構築
@@ -875,6 +922,16 @@ class OrchestratorAgent(BaseAgent):
             2: "Phase2CodeGenerationAgent",
             3: "Phase3DeploymentAgent",
             4: "Phase4SelfImprovementAgent",
+            5: "Phase5TestGenerationAgent",
+            6: "Phase6DocumentationAgent",
+            7: "Phase7DebugAgent",
+            8: "Phase8PerformanceAgent",
+            9: "Phase9SecurityAgent",
+            10: "Phase10DatabaseAgent",
+            11: "Phase11APIDesignAgent",
+            12: "Phase12UXAgent",
+            13: "Phase13RefactoringAgent",
+            14: "Phase14MonitoringAgent",
         }
 
         selected_agent = phase_map.get(current_phase, "Phase1RequirementsAgent")

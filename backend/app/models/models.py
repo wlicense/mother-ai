@@ -172,6 +172,8 @@ class ApiLog(Base):
     total_tokens = Column(Integer, nullable=False)
     cost = Column(Integer, nullable=False)  # Cost in yen (円)
     cached = Column(Boolean, default=False, nullable=False)
+    phase = Column(Integer, nullable=True)  # Phase 1-14 (エージェント種別)
+    agent_name = Column(String, nullable=True)  # エージェント名 (例: Phase1RequirementsAgent)
 
     # Timestamps
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)

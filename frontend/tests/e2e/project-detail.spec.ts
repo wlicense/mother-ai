@@ -7,7 +7,7 @@ import { loginAsApprovedUser, createProject } from './helpers';
 
 test.describe('P-005: AI対話・プロジェクト開発', () => {
   /**
-   * E2E-P005-001: Phaseカード表示
+   * E2E-P005-001: Phaseカード表示（Phase 1-14全て）
    *
    * テスト対象外:
    * - helpers.tsのloginAsApprovedUser()関数でログインに失敗する問題を調査中
@@ -17,11 +17,8 @@ test.describe('P-005: AI対話・プロジェクト開発', () => {
    * - プロジェクトが作成されている
    *
    * 期待結果:
-   * - 4つのPhaseカードが表示される
-   * - Phase 1: 要件定義
-   * - Phase 2: コード生成
-   * - Phase 3: デプロイ
-   * - Phase 4: 自己改善
+   * - 14個のPhaseカードが表示される
+   * - Phase 1-14の各タイトルが表示される
    * - 各カードにアイコン、Phase名、説明が表示
    */
   test('E2E-P005-001: Phaseカード表示', async ({ page }) => {
@@ -42,30 +39,31 @@ test.describe('P-005: AI対話・プロジェクト開発', () => {
     const phaseHeading = page.locator('text=/開発フェーズ/i').first();
     await expect(phaseHeading).toBeVisible();
 
-    // 6. 4つのPhaseカードが表示されることを確認
-    // Phase 1
-    const phase1Card = page.locator('text=/Phase 1/i').first();
-    await expect(phase1Card).toBeVisible();
-    const phase1Title = page.locator('text=/要件定義/i').first();
-    await expect(phase1Title).toBeVisible();
+    // 6. 14個のPhaseカードが表示されることを確認
+    const phaseTests = [
+      { phase: 1, title: '要件定義' },
+      { phase: 2, title: 'コード生成' },
+      { phase: 3, title: 'デプロイ' },
+      { phase: 4, title: '自己改善' },
+      { phase: 5, title: 'テスト' },
+      { phase: 6, title: 'ドキュメント' },
+      { phase: 7, title: 'デバッグ' },
+      { phase: 8, title: 'パフォーマンス' },
+      { phase: 9, title: 'セキュリティ' },
+      { phase: 10, title: 'データベース' },
+      { phase: 11, title: 'API設計' },
+      { phase: 12, title: 'UX/UI' },
+      { phase: 13, title: 'リファクタリング' },
+      { phase: 14, title: 'モニタリング' },
+    ];
 
-    // Phase 2
-    const phase2Card = page.locator('text=/Phase 2/i').first();
-    await expect(phase2Card).toBeVisible();
-    const phase2Title = page.locator('text=/コード生成/i').first();
-    await expect(phase2Title).toBeVisible();
+    for (const { phase, title } of phaseTests) {
+      const phaseCard = page.locator(`text=/Phase ${phase}/i`).first();
+      await expect(phaseCard).toBeVisible({ timeout: 3000 });
 
-    // Phase 3
-    const phase3Card = page.locator('text=/Phase 3/i').first();
-    await expect(phase3Card).toBeVisible();
-    const phase3Title = page.locator('text=/デプロイ/i').first();
-    await expect(phase3Title).toBeVisible();
-
-    // Phase 4
-    const phase4Card = page.locator('text=/Phase 4/i').first();
-    await expect(phase4Card).toBeVisible();
-    const phase4Title = page.locator('text=/自己改善/i').first();
-    await expect(phase4Title).toBeVisible();
+      const phaseTitle = page.locator(`text=/${title}/i`).first();
+      await expect(phaseTitle).toBeVisible({ timeout: 3000 });
+    }
 
     // 7. AI対話セクションが表示されることを確認
     const chatHeading = page.locator('text=/AI対話/i').first();
