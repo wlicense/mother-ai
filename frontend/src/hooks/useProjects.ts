@@ -146,3 +146,24 @@ export const useSaveFile = () => {
     },
   });
 };
+
+/**
+ * ファイル削除フック
+ */
+export const useDeleteFile = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ projectId, filePath }: {
+      projectId: string;
+      filePath: string;
+    }) => projectService.deleteProjectFile(projectId, filePath),
+    onSuccess: (_, variables) => {
+      // ファイル一覧のキャッシュを無効化
+      queryClient.invalidateQueries({ queryKey: ['projectFiles', variables.projectId] });
+    },
+    onError: (error: any) => {
+      console.error('ファイル削除エラー:', error);
+    },
+  });
+};

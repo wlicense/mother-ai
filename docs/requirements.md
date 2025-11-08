@@ -2151,3 +2151,152 @@ Phase 2（実装フェーズ）: Day 1-2: 基盤構築
 - バックエンド環境セットアップ（FastAPI）
 - Neon PostgreSQL接続
 - 基本認証実装（JWT）
+
+---
+
+## 🆕 機能拡張要件 - Phase 2コード生成エージェントの完全実装
+
+**追加日**: 2025年11月09日
+**優先度**: 最高
+
+### 拡張概要
+- **機能名**: Phase 2コード生成エージェント完全実装
+- **目的**: Phase 1で定義された要件に基づき、React + FastAPIの完全なコードを自動生成・保存・管理する機能を実現
+- **解決する課題**:
+  - 現状、Phase 2エージェントの骨格のみ存在、実用的なコード生成機能が未実装
+  - 生成されたコードの保存・管理機能が欠落
+  - ファイルツリー表示とMonaco Editorの統合が未完成
+- **期待効果**:
+  - ユーザーがAI対話でコードを生成し、即座にブラウザで確認・編集可能
+  - Phase 3デプロイへスムーズに連携
+  - マザーAIの中核機能が完成
+
+### 既存システムとの関係
+- **影響を受ける既存機能**:
+  - P-005（AI対話・プロジェクト開発ページ）: FileTree・Monaco Editorとの統合
+  - POST `/api/v1/projects/{id}/messages`: 応答にコード生成結果を含める
+  - Phase2CodeGenerationAgentクラス: 実用的な生成ロジックを追加
+- **共有するデータ**:
+  - ProjectFileテーブル（既存）: 生成コードを保存
+  - Projectテーブル: generated_code（JSON）フィールドを活用
+  - Messageテーブル: AI応答履歴
+- **統合ポイント**:
+  - バックエンドAPI: 新規エンドポイント追加
+  - フロントエンド: 既存のFileTree・Monaco Editorコンポーネントと統合
+
+### 新規追加要素
+
+#### API設計
+
+**新規エンドポイント**:
+
+| メソッド | パス | 目的 | 備考 |
+|---------|------|------|------|
+| GET | `/api/v1/projects/{id}/files` | プロジェクトのファイル一覧取得 | ファイルツリー表示用 |
+| GET | `/api/v1/projects/{id}/files/{file_path}` | 特定ファイルの内容取得 | Monaco Editor表示用 |
+| PUT | `/api/v1/projects/{id}/files/{file_path}` | ファイル内容の更新 | ユーザー編集の保存 |
+| POST | `/api/v1/projects/{id}/files` | 新規ファイル作成 | 手動ファイル追加用 |
+| DELETE | `/api/v1/projects/{id}/files/{file_path}` | ファイル削除 | ファイル管理用 |
+
+**既存エンドポイントの拡張**:
+- POST `/api/v1/projects/{id}/messages`: Phase 2選択時、生成コードをProjectFileテーブルに自動保存
+
+#### データモデル
+
+既存のProjectFileテーブルをそのまま活用（変更不要）:
+
+```python
+# backend/app/models/models.py（既存、変更なし）
+class ProjectFile(Base):
+    __tablename__ = "project_files"
+
+    id = Column(String, primary_key=True, default=generate_uuid)
+    project_id = Column(String, ForeignKey("projects.id"), nullable=False)
+    file_path = Column(String, nullable=False)  # 例: "src/App.tsx"
+    content = Column(Text, nullable=False)
+    language = Column(String, nullable=True)  # 例: "typescript", "python"
+    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+```
+
+### 実装計画
+
+#### Phase 2-A: コード保存・管理機能（最優先、コスト不要）
+
+**工数**: 3-4時間
+
+- [x] 既存調査完了
+- [ ] ファイル一覧取得API実装（GET `/api/v1/projects/{id}/files`）
+- [ ] ファイル個別取得API実装（GET `/api/v1/projects/{id}/files/{file_path}`）
+- [ ] ファイル更新API実装（PUT `/api/v1/projects/{id}/files/{file_path}`）
+- [ ] ファイル作成API実装（POST `/api/v1/projects/{id}/files`）
+- [ ] ファイル削除API実装（DELETE `/api/v1/projects/{id}/files/{file_path}`）
+- [ ] メッセージ送信時のコード自動保存ロジック追加
+- [ ] フロントエンド: FileTreeとAPIの統合
+- [ ] フロントエンド: Monaco EditorとAPIの統合
+- [ ] 動作確認テスト
+
+#### Phase 2-B: 実用的なコード生成（モックモード、コスト不要）
+
+**工数**: 2-3時間
+
+- [ ] テンプレートベースのコード生成ロジック実装
+  - フロントエンド: React + TypeScript + MUI
+  - バックエンド: FastAPI + SQLAlchemy
+- [ ] 要件に応じた動的ファイル生成
+- [ ] package.json, requirements.txt等の設定ファイル生成
+- [ ] モックモードでの動作確認
+- [ ] ファイルツリーの自動構築ロジック
+
+#### Phase 2-C: Claude API統合（料金発生、後回し）
+
+**工数**: 2-3時間
+
+**注意**: この段階で料金が発生するため、実装前に再確認
+
+- [ ] Claude APIでの高品質コード生成
+- [ ] プロンプトキャッシングの実装
+- [ ] コスト最適化（温度設定、トークン制限）
+- [ ] エラーハンドリング強化
+- [ ] 本番環境での動作テスト
+
+### 制約事項・リスク
+
+**技術的制約**:
+- Claude APIのコンテキスト長制限（200K tokens）
+- 一度に生成可能なファイル数の制限（推奨: 〜30ファイル）
+- モックモードでは簡易的なコードのみ生成
+
+**ビジネス制約**:
+- Phase 2-Cの実装時に料金発生（事前承認必要）
+- 初期はモックモードで運用し、段階的に移行
+
+**リスクと対策**:
+- リスク: 生成コードの品質が低い
+  - 対策: テンプレートベースで確実に動作するコードを生成
+- リスク: ファイル数が多すぎてパフォーマンス低下
+  - 対策: ページネーション、遅延読み込み実装
+- リスク: API料金の急増
+  - 対策: モックモードから開始、プロンプトキャッシング必須
+
+### リファクタリング計画
+
+**削除対象**:
+- モックファイルツリーデータ（ProjectDetailPage.tsx内の`mockFileTree`）→ APIから取得に変更
+
+**統合対象**:
+- Phase 2エージェントのモックロジック → 実用的なテンプレート生成に置き換え
+
+**クリーンアップ**:
+- 未使用のimport削除
+- コメントアウトされたCrewAI関連コード整理（後期で使用予定のため保持）
+
+### 実行順序
+
+1. **Phase 2-A（コード保存・管理）** - 最優先、コスト不要
+2. **Phase 2-B（実用的コード生成）** - モックモード、コスト不要
+3. **Phase 2-C（Claude API統合）** - 料金発生前に承認取得
+
+---
+
+注: 実装完了後は該当部分を削除し、コードを真実源とする

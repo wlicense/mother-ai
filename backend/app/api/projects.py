@@ -220,6 +220,78 @@ async def send_message(
             db.add(assistant_message)
             db.commit()
 
+            # Phase 2の場合、生成されたコードをProjectFileテーブルに自動保存
+            if request.phase == 2 and "generated_code" in result:
+                generated_code = result.get("generated_code", {})
+
+                # フロントエンドコードを保存
+                for file_path, content in generated_code.get("frontend", {}).items():
+                    # 言語を推定
+                    language = None
+                    if file_path.endswith('.tsx') or file_path.endswith('.ts'):
+                        language = 'typescript'
+                    elif file_path.endswith('.jsx') or file_path.endswith('.js'):
+                        language = 'javascript'
+                    elif file_path.endswith('.css'):
+                        language = 'css'
+                    elif file_path.endswith('.json'):
+                        language = 'json'
+                    elif file_path.endswith('.html'):
+                        language = 'html'
+
+                    # 既存ファイルを検索
+                    existing_file = db.query(ProjectFile).filter(
+                        ProjectFile.project_id == project_id,
+                        ProjectFile.file_path == f"frontend/{file_path}"
+                    ).first()
+
+                    if existing_file:
+                        # 更新
+                        existing_file.content = content
+                        existing_file.language = language
+                        existing_file.updated_at = datetime.utcnow()
+                    else:
+                        # 新規作成
+                        new_file = ProjectFile(
+                            project_id=project_id,
+                            file_path=f"frontend/{file_path}",
+                            content=content,
+                            language=language,
+                        )
+                        db.add(new_file)
+
+                # バックエンドコードを保存
+                for file_path, content in generated_code.get("backend", {}).items():
+                    # 言語を推定
+                    language = None
+                    if file_path.endswith('.py'):
+                        language = 'python'
+                    elif file_path.endswith('.txt'):
+                        language = 'plaintext'
+
+                    # 既存ファイルを検索
+                    existing_file = db.query(ProjectFile).filter(
+                        ProjectFile.project_id == project_id,
+                        ProjectFile.file_path == f"backend/{file_path}"
+                    ).first()
+
+                    if existing_file:
+                        # 更新
+                        existing_file.content = content
+                        existing_file.language = language
+                        existing_file.updated_at = datetime.utcnow()
+                    else:
+                        # 新規作成
+                        new_file = ProjectFile(
+                            project_id=project_id,
+                            file_path=f"backend/{file_path}",
+                            content=content,
+                            language=language,
+                        )
+                        db.add(new_file)
+
+                db.commit()
+
             # 完了イベント
             yield f"data: {json.dumps({'type': 'end', 'messageId': assistant_message.id})}\n\n"
 
@@ -382,3 +454,75 @@ async def get_files(
             for f in files
         ]
     }
+
+
+@router.get("/{project_id}/files/{file_path:path}")
+async def get_file_by_path(
+    project_id: str,
+    file_path: str,
+    current_user: User = Depends(get_current_approved_user),
+    db: Session = Depends(get_db)
+):
+    """
+    特定のファイル内容を取得（パスパラメータ版）
+    """
+    # プロジェクトの所有権確認
+    project = db.query(Project).filter(
+        Project.id == project_id,
+        Project.owner_id == current_user.id
+    ).first()
+
+    if not project:
+        raise HTTPException(status_code=404, detail="プロジェクトが見つかりません")
+
+    # ファイルを取得
+    file = db.query(ProjectFile).filter(
+        ProjectFile.project_id == project_id,
+        ProjectFile.file_path == file_path
+    ).first()
+
+    if not file:
+        raise HTTPException(status_code=404, detail="ファイルが見つかりません")
+
+    return {
+        "id": file.id,
+        "file_path": file.file_path,
+        "content": file.content,
+        "language": file.language,
+        "created_at": file.created_at.isoformat(),
+        "updated_at": file.updated_at.isoformat(),
+    }
+
+
+@router.delete("/{project_id}/files/{file_path:path}")
+async def delete_file(
+    project_id: str,
+    file_path: str,
+    current_user: User = Depends(get_current_approved_user),
+    db: Session = Depends(get_db)
+):
+    """
+    ファイルを削除
+    """
+    # プロジェクトの所有権確認
+    project = db.query(Project).filter(
+        Project.id == project_id,
+        Project.owner_id == current_user.id
+    ).first()
+
+    if not project:
+        raise HTTPException(status_code=404, detail="プロジェクトが見つかりません")
+
+    # ファイルを取得
+    file = db.query(ProjectFile).filter(
+        ProjectFile.project_id == project_id,
+        ProjectFile.file_path == file_path
+    ).first()
+
+    if not file:
+        raise HTTPException(status_code=404, detail="ファイルが見つかりません")
+
+    db.delete(file)
+    db.commit()
+
+    return {"message": "ファイルを削除しました", "file_path": file_path}

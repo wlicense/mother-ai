@@ -22,7 +22,7 @@ import CodeIcon from '@mui/icons-material/Code'
 import DescriptionIcon from '@mui/icons-material/Description'
 import RocketLaunchIcon from '@mui/icons-material/RocketLaunch'
 import AutoFixHighIcon from '@mui/icons-material/AutoFixHigh'
-import { useProject, useSendMessage, useProjectFile, useSaveFile } from '../../hooks/useProjects'
+import { useProject, useSendMessage, useProjectFile, useProjectFiles, useSaveFile } from '../../hooks/useProjects'
 import CodeEditor from '../../components/CodeEditor'
 import FileTree, { FileNode } from '../../components/FileTree'
 
@@ -62,47 +62,72 @@ const phases = [
   },
 ]
 
-// モックファイルツリーデータ（Phase 2用）
-const mockFileTree: FileNode[] = [
-  {
-    name: 'src',
-    type: 'folder',
-    path: 'src',
-    children: [
-      {
-        name: 'index.ts',
-        type: 'file',
-        path: 'src/index.ts',
-        language: 'typescript',
-      },
-      {
-        name: 'App.tsx',
-        type: 'file',
-        path: 'src/App.tsx',
-        language: 'typescript',
-      },
-      {
-        name: 'components',
-        type: 'folder',
-        path: 'src/components',
-        children: [
-          {
-            name: 'Header.tsx',
+/**
+ * フラットなファイルリストを階層的なツリー構造に変換
+ */
+const buildFileTree = (files: any[]): FileNode[] => {
+  const root: { [key: string]: FileNode } = {}
+
+  files.forEach((file) => {
+    const parts = file.file_path.split('/')
+    let current = root
+
+    parts.forEach((part: string, index: number) => {
+      const isLastPart = index === parts.length - 1
+      const currentPath = parts.slice(0, index + 1).join('/')
+
+      if (!current[part]) {
+        if (isLastPart) {
+          // ファイルノード
+          current[part] = {
+            name: part,
             type: 'file',
-            path: 'src/components/Header.tsx',
-            language: 'typescript',
-          },
-        ],
-      },
-    ],
-  },
-  {
-    name: 'package.json',
-    type: 'file',
-    path: 'package.json',
-    language: 'json',
-  },
-]
+            path: file.file_path,
+            language: file.language || undefined,
+          }
+        } else {
+          // フォルダノード
+          current[part] = {
+            name: part,
+            type: 'folder',
+            path: currentPath,
+            children: [],
+          }
+        }
+      }
+
+      // フォルダの場合、子要素に移動
+      if (!isLastPart && current[part].type === 'folder') {
+        if (!current[part].children) {
+          current[part].children = []
+        }
+        // 次のレベルのための一時的なマップを作成
+        const nextLevel: { [key: string]: FileNode } = {}
+        current[part].children!.forEach((child) => {
+          nextLevel[child.name] = child
+        })
+        current = nextLevel
+      }
+    })
+  })
+
+  // ルートオブジェクトを配列に変換
+  const convertToArray = (obj: { [key: string]: FileNode }): FileNode[] => {
+    return Object.values(obj).map((node) => {
+      if (node.type === 'folder' && node.children) {
+        // 子要素を再帰的に処理
+        const childMap: { [key: string]: FileNode } = {}
+        node.children.forEach((child) => {
+          childMap[child.name] = child
+        })
+        node.children = convertToArray(childMap)
+      }
+      return node
+    })
+  }
+
+  return convertToArray(root)
+}
 
 export default function ProjectDetailPage() {
   const { id } = useParams()
@@ -116,8 +141,12 @@ export default function ProjectDetailPage() {
 
   const { data: project, isLoading, error } = useProject(id!)
   const { sendMessage } = useSendMessage()
+  const { data: projectFilesData } = useProjectFiles(id!)
   const { data: fileData } = useProjectFile(id!, selectedFile?.path || null)
   const { mutate: saveFile } = useSaveFile()
+
+  // ファイルツリーを構築
+  const fileTree = projectFilesData?.files ? buildFileTree(projectFilesData.files) : []
 
   // メッセージリストの最下部にスクロール
   const scrollToBottom = () => {
@@ -334,7 +363,7 @@ export default function ProjectDetailPage() {
                   </Typography>
                 </Box>
                 <FileTree
-                  files={mockFileTree}
+                  files={fileTree}
                   onFileSelect={handleFileSelect}
                   selectedFile={selectedFile?.path}
                 />

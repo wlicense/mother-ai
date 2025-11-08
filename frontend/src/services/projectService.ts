@@ -163,9 +163,7 @@ export const getProjectFiles = async (projectId: string): Promise<any> => {
  * プロジェクトの特定のファイルを取得
  */
 export const getProjectFile = async (projectId: string, filePath: string): Promise<any> => {
-  const response = await apiClient.get(`${BASE_PATH}/${projectId}/files`, {
-    params: { file_path: filePath },
-  });
+  const response = await apiClient.get(`${BASE_PATH}/${projectId}/files/${filePath}`);
   return response.data;
 };
 
@@ -186,6 +184,17 @@ export const saveProjectFile = async (
   return response.data;
 };
 
+/**
+ * プロジェクトのファイルを削除
+ */
+export const deleteProjectFile = async (
+  projectId: string,
+  filePath: string
+): Promise<any> => {
+  const response = await apiClient.delete(`${BASE_PATH}/${projectId}/files/${filePath}`);
+  return response.data;
+};
+
 export default {
   getProjects,
   createProject,
@@ -195,4 +204,5 @@ export default {
   getProjectFiles,
   getProjectFile,
   saveProjectFile,
+  deleteProjectFile,
 };

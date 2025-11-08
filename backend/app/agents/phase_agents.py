@@ -175,15 +175,52 @@ class Phase2CodeGenerationAgent(BaseAgent):
         use_real_ai = os.getenv('USE_REAL_AI', 'false').lower() == 'true'
 
         if not use_real_ai:
-            # モックモード: ダミーのコードを返す
+            # モックモード: テンプレートベースで実用的なコードを生成
+            from app.agents.templates.code_templates import generate_project_code
+
             project_name = task.get("project_context", {}).get("project_name", "My App")
+            user_message = task.get("user_message", "")
+
+            # テンプレートからコードを生成
+            generated_code = generate_project_code(project_name, user_message)
+
+            # ファイル数をカウント
+            frontend_count = len(generated_code.get("frontend", {}))
+            backend_count = len(generated_code.get("backend", {}))
+            total_count = frontend_count + backend_count
+
+            # レスポンスメッセージを作成
+            response_message = f"""✅ **{project_name}のコードを生成しました！**
+
+## 生成されたファイル
+
+**フロントエンド** ({frontend_count}ファイル):
+- React + TypeScript + MUI v6
+- Vite 5によるモダンなビルド環境
+- React Router v6でルーティング
+- TanStack Query (React Query)でデータフェッチ
+- レスポンシブ対応
+
+**バックエンド** ({backend_count}ファイル):
+- FastAPI + SQLAlchemy 2.0
+- PostgreSQL対応
+- RESTful API設計
+- Pydanticによるバリデーション
+- Docker対応
+
+**次のステップ:**
+1. Phase 3でデプロイスクリプトを生成
+2. 本番環境にデプロイ
+
+---
+*このコードは「マザーAI」Phase 2エージェントによって自動生成されました。*
+"""
+
             return {
                 "status": "success",
-                "response": f"【モックモード】{project_name}のコードを生成しました。\n\n以下のファイルを生成しました:\n- frontend/src/App.tsx\n- frontend/src/pages/Dashboard.tsx\n- backend/main.py\n- backend/models.py",
-                "generated_code": {
-                    "frontend/src/App.tsx": "// モックコード\nimport React from 'react';\n\nfunction App() {\n  return <div>Hello World</div>;\n}\n\nexport default App;",
-                    "backend/main.py": "# モックコード\nfrom fastapi import FastAPI\n\napp = FastAPI()\n\n@app.get('/')\ndef root():\n    return {'message': 'Hello World'}"
-                }
+                "response": response_message,
+                "generated_code": generated_code,
+                "file_count": total_count,
             }
 
         # リアルAIモード: Claude APIを使用
@@ -421,15 +458,55 @@ class Phase3DeploymentAgent(BaseAgent):
         use_real_ai = os.getenv('USE_REAL_AI', 'false').lower() == 'true'
 
         if not use_real_ai:
-            # モックモード: ダミーのデプロイスクリプトを返す
-            project_name = task.get("project_context", {}).get("project_name", "my-project")
+            # モックモード: テンプレートベースで実用的なデプロイスクリプトを生成
+            from app.agents.templates.deployment_templates import generate_deployment_scripts
+
+            project_name = task.get("project_context", {}).get("project_name", "My App")
+
+            # テンプレートからデプロイスクリプトを生成
+            deployment_scripts = generate_deployment_scripts(project_name)
+
+            # スクリプト数をカウント
+            script_count = len(deployment_scripts)
+
+            # レスポンスメッセージを作成
+            response_message = f"""✅ **{project_name}のデプロイスクリプトを生成しました！**
+
+## 生成されたファイル ({script_count}個)
+
+**デプロイスクリプト:**
+- `deploy.sh`: Vercel + Cloud Run自動デプロイ
+- `.env.production.template`: 環境変数テンプレート
+- `DEPLOYMENT_CHECKLIST.md`: デプロイ前確認事項
+
+**Vercel設定:**
+- `vercel.json`: Vercel設定ファイル
+
+**Docker設定:**
+- `Dockerfile`: Cloud Run用Dockerイメージ
+- `.dockerignore`: Docker除外設定
+
+**CI/CD（GitHub Actions）:**
+- `.github/workflows/deploy.yml`: 本番環境デプロイ
+- `.github/workflows/test.yml`: テスト自動実行
+
+**ドキュメント:**
+- `README_DEPLOY.md`: 詳細なデプロイ手順書
+
+**次のステップ:**
+1. `.env.production.template` をコピーして `.env.production` を作成
+2. 必要な環境変数を設定
+3. `chmod +x deploy.sh && ./deploy.sh` でデプロイ実行
+
+---
+*このデプロイ設定は「マザーAI」Phase 3エージェントによって自動生成されました。*
+"""
+
             return {
                 "status": "success",
-                "response": f"【モックモード】{project_name}のデプロイスクリプトを生成しました。\n\n以下のファイルを生成しました:\n- deploy.sh\n- vercel.json\n- Dockerfile",
-                "deployment_scripts": {
-                    "deploy.sh": "#!/bin/bash\n# モックデプロイスクリプト\necho 'Deploying to production...'\nvercel deploy --prod\ngcloud run deploy",
-                    "vercel.json": "{\n  \"version\": 2,\n  \"builds\": [{\n    \"src\": \"package.json\",\n    \"use\": \"@vercel/static-build\"\n  }]\n}"
-                }
+                "response": response_message,
+                "deployment_scripts": deployment_scripts,
+                "script_count": script_count,
             }
 
         # リアルAIモード: Claude APIを使用
@@ -682,25 +759,18 @@ class Phase4SelfImprovementAgent(BaseAgent):
         use_real_ai = os.getenv('USE_REAL_AI', 'false').lower() == 'true'
 
         if not use_real_ai:
-            # モックモード: ダミーの改善提案を返す
-            return {
-                "status": "success",
-                "response": "【モックモード】マザーAIの改善案を分析しました。\n\n## 改善提案\n\n### 1. パフォーマンス最適化\n- データベースクエリのN+1問題を解決\n- React.memoの活用でレンダリング最適化\n\n### 2. 新機能追加\n- Phase 5: テスト自動生成エージェント\n- チーム協業機能\n\n### 3. セキュリティ強化\n- API レート制限の実装\n- HTTPS強制の確認",
-                "improvements": [
-                    {
-                        "type": "performance",
-                        "title": "データベースクエリの最適化",
-                        "description": "N+1問題を解決してクエリ数を削減",
-                        "priority": "high"
-                    },
-                    {
-                        "type": "feature",
-                        "title": "Phase 5追加",
-                        "description": "テスト自動生成エージェントの実装",
-                        "priority": "medium"
-                    }
-                ]
-            }
+            # モックモード: テンプレートベースで実用的な改善提案を生成
+            from app.agents.templates.improvement_templates import generate_improvement_proposals
+
+            user_message = task.get("user_message", "")
+
+            # ユーザーメッセージから改善タイプを推定
+            improvement_type = self._estimate_improvement_type(user_message)
+
+            # テンプレートから改善提案を生成
+            proposal = generate_improvement_proposals(improvement_type)
+
+            return proposal
 
         # リアルAIモード: Claude APIを使用
         improvement_request = task.get("improvement_request", "")
