@@ -51,6 +51,10 @@ logs/
 .coverage
 htmlcov/
 .pytest_cache/
+test-*.json
+test-*.txt
+frontend/test-results/
+frontend/e2e-screenshots/
 
 # Temporary files
 .appgenius_temp/
