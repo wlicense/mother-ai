@@ -40,13 +40,15 @@ export default function ProjectsPage() {
     }
 
     try {
-      await createProjectMutation.mutateAsync({
+      const newProject = await createProjectMutation.mutateAsync({
         name: newProjectName,
         description: newProjectDescription,
       })
       setOpen(false)
       setNewProjectName('')
       setNewProjectDescription('')
+      // 作成したプロジェクトの詳細ページに自動遷移
+      navigate(`/projects/${newProject.id}`)
     } catch (error) {
       console.error('プロジェクト作成エラー:', error)
     }
