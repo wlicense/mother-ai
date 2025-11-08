@@ -1,5 +1,6 @@
 from typing import Dict, Any
 from app.agents.base import BaseAgent, AgentLevel
+from app.agents.claude_client import get_claude_client
 
 
 class Phase1RequirementsAgent(BaseAgent):
@@ -14,6 +15,33 @@ class Phase1RequirementsAgent(BaseAgent):
             agent_type="requirements",
             level=AgentLevel.WORKER
         )
+        self.claude = get_claude_client()
+
+        # システムプロンプト（プロンプトキャッシング対象）
+        self.system_prompt = """あなたは「マザーAI」の Phase 1 要件定義エージェントです。
+
+あなたの役割:
+- ユーザーとの対話を通じて、開発したいアプリケーションの要件を明確にする
+- 曖昧な要件を具体的な機能要求に変換する
+- 技術的な実現可能性を考慮しながら質問する
+- React + TypeScript + FastAPI + PostgreSQL のスタックで実現可能な範囲を提案する
+
+対話スタイル:
+- 親しみやすく、専門用語を避ける
+- 1回の応答で3-5個の質問に絞る
+- ユーザーの回答から次の質問を動的に生成
+- 具体例を示しながら質問する
+
+目標:
+- プロジェクトのタイプ（ECサイト、SNS、ダッシュボード等）を特定
+- 主要機能を3-5個リストアップ
+- ユーザー種別（一般ユーザー、管理者等）を特定
+- データモデルの概要を把握
+
+出力フォーマット:
+1. ユーザーへの親しみやすい応答（質問含む）
+2. 現在把握している要件の要約
+3. 次のステップの提案"""
 
     async def execute(self, task: Dict[str, Any]) -> Dict[str, Any]:
         """
@@ -21,47 +49,62 @@ class Phase1RequirementsAgent(BaseAgent):
         """
         user_message = task.get("user_message", "")
         project_context = task.get("project_context", {})
+        conversation_history = task.get("conversation_history", [])
 
-        # TODO: Claude APIを使用して要件を引き出す対話を実行
-        # プロンプトキャッシングを使用してコスト削減
+        # 会話履歴を構築
+        messages = []
+        for msg in conversation_history:
+            messages.append({
+                "role": msg.get("role", "user"),
+                "content": msg.get("content", "")
+            })
 
-        # Mock response with realistic requirements gathering
-        keywords = ["EC", "サイト", "ショップ", "ecommerce", "e-commerce"]
-        is_ecommerce = any(kw in user_message.lower() for kw in keywords)
+        # 現在のユーザーメッセージを追加
+        messages.append({
+            "role": "user",
+            "content": user_message
+        })
 
-        if is_ecommerce:
-            response = """ECサイトの開発ですね。いくつか確認させてください：
+        # Claude APIで要件を引き出す
+        result = await self.claude.generate_text(
+            messages=messages,
+            system_prompt=self.system_prompt,
+            max_tokens=2048,
+            temperature=0.7,
+            use_cache=True  # プロンプトキャッシングを使用
+        )
 
-1. **商品管理**: どのような商品を扱いますか？（例: 物理商品、デジタル商品）
-2. **決済方法**: Stripe、PayPalなど、どの決済サービスを利用しますか？
-3. **ユーザー管理**: 会員登録機能は必要ですか？
-4. **在庫管理**: リアルタイムの在庫管理は必要ですか？
-5. **配送管理**: 配送業者との連携は必要ですか？
-
-まずは基本的な機能からお聞かせください。"""
-            requirements = {
-                "project_type": "ecommerce",
-                "features": ["product_catalog", "shopping_cart", "user_auth"],
+        if "error" in result:
+            return {
+                "status": "error",
+                "response": f"エラーが発生しました: {result['error']}",
+                "requirements": {},
             }
-        else:
-            response = f"""「{user_message}」についてお伺いします。
 
-プロジェクトの詳細を教えてください：
-1. **目的**: このアプリケーションで何を実現したいですか？
-2. **ユーザー**: 誰が使いますか？（一般ユーザー、管理者など）
-3. **主要機能**: 必須の機能は何ですか？
-4. **データ**: どのようなデータを扱いますか？
+        # レスポンスから要件を抽出（簡易版）
+        response_text = result["content"]
 
-具体的な要件を教えていただければ、より詳細な提案ができます。"""
-            requirements = {
-                "project_type": "general",
-                "features": [],
-            }
+        # プロジェクトタイプを推定
+        project_type = "general"
+        if any(kw in user_message.lower() for kw in ["ec", "ecommerce", "ショップ", "通販"]):
+            project_type = "ecommerce"
+        elif any(kw in user_message.lower() for kw in ["sns", "ソーシャル", "コミュニティ"]):
+            project_type = "social"
+        elif any(kw in user_message.lower() for kw in ["dashboard", "ダッシュボード", "管理"]):
+            project_type = "dashboard"
+
+        requirements = {
+            "project_type": project_type,
+            "features": [],  # 後で会話から抽出
+            "context": project_context,
+        }
 
         return {
             "status": "success",
-            "response": response,
+            "response": response_text,
             "requirements": requirements,
+            "usage": result.get("usage", {}),
+            "cost": self.claude.estimate_cost(result.get("usage", {})),
         }
 
 

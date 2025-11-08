@@ -21,7 +21,7 @@ pydantic-settings==2.5.2
 
 # AI and agents
 anthropic==0.39.0
-# crewai==0.80.0  # 一旦コメントアウト（ビルド時間短縮のため、後で追加）
+# crewai==0.80.0  # ビルド時間が30分以上かかるため一旦コメントアウト
 
 # Utilities
 httpx==0.27.2

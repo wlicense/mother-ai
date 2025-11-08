@@ -1,10 +1,27 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
+from pydantic import BaseModel
+from typing import Optional, List, Dict, Any
+
 from app.core.database import get_db
 from app.core.deps import get_current_approved_user
 from app.models.models import User, Agent
+from app.agents.phase_agents import (
+    Phase1RequirementsAgent,
+    Phase2CodeGenerationAgent,
+    Phase3DeploymentAgent,
+    Phase4SelfImprovementAgent,
+)
 
 router = APIRouter()
+
+
+class AgentExecuteRequest(BaseModel):
+    """エージェント実行リクエスト"""
+    phase: int  # 1-4
+    user_message: str
+    project_context: Optional[Dict[str, Any]] = {}
+    conversation_history: Optional[List[Dict[str, str]]] = []
 
 
 @router.get("/")
@@ -62,14 +79,56 @@ async def get_agent(
 
 @router.post("/execute")
 async def execute_agent(
+    request: AgentExecuteRequest,
     current_user: User = Depends(get_current_approved_user),
     db: Session = Depends(get_db)
 ):
     """
-    エージェントを実行（実装予定）
+    エージェントを実行
+
+    Phase 1: 要件定義エージェント
+    Phase 2: コード生成エージェント
+    Phase 3: デプロイエージェント
+    Phase 4: 自己改善エージェント
     """
-    # TODO: Implement agent execution with CrewAI
-    raise HTTPException(
-        status_code=501,
-        detail="エージェント実行機能は実装中です"
-    )
+    # Phaseに応じてエージェントを選択
+    agent_map = {
+        1: Phase1RequirementsAgent(),
+        2: Phase2CodeGenerationAgent(),
+        3: Phase3DeploymentAgent(),
+        4: Phase4SelfImprovementAgent(),
+    }
+
+    agent = agent_map.get(request.phase)
+    if not agent:
+        raise HTTPException(
+            status_code=400,
+            detail=f"無効なPhaseです: {request.phase}"
+        )
+
+    # タスクを構築
+    task = {
+        "user_message": request.user_message,
+        "project_context": request.project_context,
+        "conversation_history": request.conversation_history,
+        "user_id": current_user.id,
+    }
+
+    # エージェントを実行
+    try:
+        result = await agent.execute(task)
+
+        # TODO: 実行ログをデータベースに保存
+
+        return {
+            "status": "success",
+            "phase": request.phase,
+            "agent_name": agent.name,
+            "result": result,
+        }
+
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"エージェント実行エラー: {str(e)}"
+        )
