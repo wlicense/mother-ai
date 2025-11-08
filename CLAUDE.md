@@ -84,6 +84,10 @@
 
 ## テスト認証情報
 ```yaml
+管理者アカウント:
+  email: admin@motherai.local
+  password: AdminTest2025!
+
 開発用アカウント:
   email: test@motherai.local
   password: DevTest2025!
