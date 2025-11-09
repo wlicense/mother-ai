@@ -168,9 +168,17 @@ async def send_message(
         if msg.role in ["user", "assistant"]
     ]
 
+    # プロジェクト情報を事前に取得（DBセッションが閉じる前に）
+    project_name = project.name
+    project_description = project.description
+
     # SSEストリーミング
     async def event_stream():
         """Server-Sent Eventsストリーム"""
+        # 新しいDBセッションを作成
+        from app.core.database import SessionLocal
+        new_db = SessionLocal()
+
         try:
             # 開始イベント
             yield f"data: {json.dumps({'type': 'start'})}\n\n"
@@ -220,7 +228,7 @@ async def send_message(
                 "user_message": request.content,
                 "project_context": {
                     "project_id": project_id,
-                    "project_name": project.name,
+                    "project_name": project_name,
                 },
             })
 
@@ -239,8 +247,9 @@ async def send_message(
                 role="assistant",
                 content=full_response,
             )
-            db.add(assistant_message)
-            db.commit()
+            new_db.add(assistant_message)
+            new_db.commit()
+            new_db.refresh(assistant_message)
 
             # Phase 2の場合、生成されたコードをProjectFileテーブルに自動保存
             if request.phase == 2 and "generated_code" in result:
@@ -262,7 +271,7 @@ async def send_message(
                         language = 'html'
 
                     # 既存ファイルを検索
-                    existing_file = db.query(ProjectFile).filter(
+                    existing_file = new_db.query(ProjectFile).filter(
                         ProjectFile.project_id == project_id,
                         ProjectFile.file_path == f"frontend/{file_path}"
                     ).first()
@@ -280,7 +289,7 @@ async def send_message(
                             content=content,
                             language=language,
                         )
-                        db.add(new_file)
+                        new_db.add(new_file)
 
                 # バックエンドコードを保存
                 for file_path, content in generated_code.get("backend", {}).items():
@@ -292,7 +301,7 @@ async def send_message(
                         language = 'plaintext'
 
                     # 既存ファイルを検索
-                    existing_file = db.query(ProjectFile).filter(
+                    existing_file = new_db.query(ProjectFile).filter(
                         ProjectFile.project_id == project_id,
                         ProjectFile.file_path == f"backend/{file_path}"
                     ).first()
@@ -310,9 +319,9 @@ async def send_message(
                             content=content,
                             language=language,
                         )
-                        db.add(new_file)
+                        new_db.add(new_file)
 
-                db.commit()
+                new_db.commit()
 
             # 完了イベント
             yield f"data: {json.dumps({'type': 'end', 'messageId': assistant_message.id})}\n\n"
@@ -321,6 +330,9 @@ async def send_message(
             # エラーイベント
             error_msg = f"エラーが発生しました: {str(e)}"
             yield f"data: {json.dumps({'type': 'error', 'message': error_msg})}\n\n"
+        finally:
+            # DBセッションを確実にクローズ
+            new_db.close()
 
     return StreamingResponse(event_stream(), media_type="text/event-stream")
 

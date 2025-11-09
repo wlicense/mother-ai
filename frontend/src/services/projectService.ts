@@ -67,7 +67,7 @@ export const sendMessageStream = async (
 
   // fetchを使用してSSEストリーミング
   try {
-    const response = await fetch(`${backendUrl}${BASE_PATH}/${projectId}/messages`, {
+    const response = await fetch(`${backendUrl}/api/v1${BASE_PATH}/${projectId}/messages`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
