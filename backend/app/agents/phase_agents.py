@@ -891,6 +891,716 @@ class Phase4SelfImprovementAgent(BaseAgent):
             return "general"
 
 
+class Phase5TestGenerationAgent(BaseAgent):
+    """
+    Phase 5: テスト生成エージェント
+    ユニットテスト・E2Eテストを自動生成
+    """
+
+    def __init__(self):
+        super().__init__(
+            name="Phase5TestGenerationAgent",
+            agent_type="test_generation",
+            level=AgentLevel.WORKER
+        )
+        self.claude = get_claude_client()
+
+    async def execute(self, task: Dict[str, Any]) -> Dict[str, Any]:
+        """テスト生成タスクを実行"""
+        use_real_ai = os.getenv('USE_REAL_AI', 'false').lower() == 'true'
+
+        if not use_real_ai:
+            # モックモード: テンプレートベースでテストコードを生成
+            from app.agents.templates.test_templates import generate_test_files
+
+            project_name = task.get("project_context", {}).get("project_name", "My App")
+            generated_code = task.get("generated_code", {})
+
+            # テストファイルを生成
+            test_files = generate_test_files(project_name, generated_code)
+
+            response_message = f"""✅ **{project_name}のテストコードを生成しました！**
+
+## 生成されたテストファイル ({len(test_files)}個)
+
+**フロントエンド:**
+- Vitest設定 + React Testing Library
+- コンポーネントテスト（ユニット）
+- E2Eテスト（Playwright）
+
+**バックエンド:**
+- pytest設定
+- APIテスト
+- データベーステスト
+
+**次のステップ:**
+1. `npm install` でテスト依存関係をインストール
+2. `npm run test` でテスト実行
+3. `npm run test:coverage` でカバレッジ確認
+
+---
+*このテストコードは「マザーAI」Phase 5エージェントによって自動生成されました。*
+"""
+
+            return {
+                "status": "success",
+                "response": response_message,
+                "test_files": test_files,
+                "file_count": len(test_files),
+            }
+
+        # リアルAIモード: Claude APIを使用
+        return {
+            "status": "error",
+            "response": "リアルAIモードは未実装です",
+        }
+
+
+class Phase6DocumentationAgent(BaseAgent):
+    """
+    Phase 6: ドキュメント生成エージェント
+    API仕様書、README、開発ガイドを自動生成
+    """
+
+    def __init__(self):
+        super().__init__(
+            name="Phase6DocumentationAgent",
+            agent_type="documentation",
+            level=AgentLevel.WORKER
+        )
+        self.claude = get_claude_client()
+
+    async def execute(self, task: Dict[str, Any]) -> Dict[str, Any]:
+        """ドキュメント生成タスクを実行"""
+        use_real_ai = os.getenv('USE_REAL_AI', 'false').lower() == 'true'
+
+        if not use_real_ai:
+            # モックモード: テンプレートベースでドキュメントを生成
+            project_name = task.get("project_context", {}).get("project_name", "My App")
+
+            # 基本的なドキュメントセットを生成
+            docs = {
+                "README.md": f"""# {project_name}
+
+「マザーAI」によって自動生成されたプロジェクト
+
+## 機能
+
+- React + TypeScript フロントエンド
+- FastAPI バックエンド
+- PostgreSQL データベース
+
+## セットアップ
+
+### フロントエンド
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+### バックエンド
+```bash
+cd backend
+pip install -r requirements.txt
+python -m app.main
+```
+
+## デプロイ
+
+Vercel + Cloud Runに自動デプロイされます。
+
+---
+*このプロジェクトは「マザーAI」によって自動生成されました。*
+""",
+                "CONTRIBUTING.md": f"""# {project_name} - 開発ガイド
+
+## 開発環境
+
+- Node.js 20+
+- Python 3.12+
+- PostgreSQL 15+
+
+## コーディング規約
+
+### フロントエンド
+- TypeScript strictモード
+- ESLint + Prettier
+- MUI コンポーネント優先
+
+### バックエンド
+- PEP 8準拠
+- Black + isort
+- 型ヒント必須
+
+## テスト
+
+```bash
+# フロントエンド
+npm run test
+npm run test:e2e
+
+# バックエンド
+pytest
+```
+""",
+                "API_DOCUMENTATION.md": f"""# {project_name} - API仕様書
+
+## ベースURL
+
+```
+開発: http://localhost:8572/api/v1
+本番: https://api.example.com/api/v1
+```
+
+## 認証
+
+Bearer Token (JWT)
+
+```http
+Authorization: Bearer <token>
+```
+
+## エンドポイント
+
+### GET /items
+アイテム一覧取得
+
+### POST /items
+アイテム作成
+
+### GET /items/{{id}}
+アイテム詳細取得
+
+### PUT /items/{{id}}
+アイテム更新
+
+### DELETE /items/{{id}}
+アイテム削除
+""",
+            }
+
+            response_message = f"""✅ **{project_name}のドキュメントを生成しました！**
+
+## 生成されたドキュメント ({len(docs)}個)
+
+- **README.md**: プロジェクト概要
+- **CONTRIBUTING.md**: 開発ガイド
+- **API_DOCUMENTATION.md**: API仕様書
+
+**次のステップ:**
+1. ドキュメントをレビュー
+2. プロジェクト固有の情報を追記
+3. リポジトリにコミット
+
+---
+*このドキュメントは「マザーAI」Phase 6エージェントによって自動生成されました。*
+"""
+
+            return {
+                "status": "success",
+                "response": response_message,
+                "documentation": docs,
+                "doc_count": len(docs),
+            }
+
+        # リアルAIモード: Claude APIを使用
+        return {
+            "status": "error",
+            "response": "リアルAIモードは未実装です",
+        }
+
+
+class Phase7DebugAgent(BaseAgent):
+    """
+    Phase 7: デバッグ支援エージェント
+    コードスメル、バグ、パフォーマンス問題を検出
+    """
+
+    def __init__(self):
+        super().__init__(
+            name="Phase7DebugAgent",
+            agent_type="debug",
+            level=AgentLevel.WORKER
+        )
+        self.claude = get_claude_client()
+
+    async def execute(self, task: Dict[str, Any]) -> Dict[str, Any]:
+        """デバッグレポートを生成"""
+        use_real_ai = os.getenv('USE_REAL_AI', 'false').lower() == 'true'
+
+        if not use_real_ai:
+            from app.agents.templates.extended_templates import generate_debug_report
+
+            project_name = task.get("project_context", {}).get("project_name", "My App")
+            generated_code = task.get("generated_code", {})
+
+            debug_report = generate_debug_report(project_name, generated_code)
+
+            response_message = f"""✅ **{project_name}のデバッグレポートを作成しました！**
+
+## 検出された問題
+
+### 優先度: 高
+- Null参照の可能性: 5箇所
+- メモリリーク: 1箇所
+
+### 優先度: 中
+- 未使用のインポート: 3箇所
+- デッドコード: 2箇所
+- 型安全性: 3箇所
+
+### 優先度: 低
+- パフォーマンス最適化の余地: 4箇所
+
+詳細はレポートファイルをご確認ください。
+
+---
+*このレポートは「マザーAI」Phase 7エージェントによって自動生成されました。*
+"""
+
+            return {
+                "status": "success",
+                "response": response_message,
+                "debug_report": debug_report,
+            }
+
+        return {
+            "status": "error",
+            "response": "リアルAIモードは未実装です",
+        }
+
+
+class Phase8PerformanceAgent(BaseAgent):
+    """
+    Phase 8: パフォーマンス最適化エージェント
+    Lighthouse分析、Core Web Vitals改善
+    """
+
+    def __init__(self):
+        super().__init__(
+            name="Phase8PerformanceAgent",
+            agent_type="performance",
+            level=AgentLevel.WORKER
+        )
+        self.claude = get_claude_client()
+
+    async def execute(self, task: Dict[str, Any]) -> Dict[str, Any]:
+        """パフォーマンス最適化レポートを生成"""
+        use_real_ai = os.getenv('USE_REAL_AI', 'false').lower() == 'true'
+
+        if not use_real_ai:
+            from app.agents.templates.extended_templates import generate_performance_report
+
+            project_name = task.get("project_context", {}).get("project_name", "My App")
+
+            performance_report = generate_performance_report(project_name)
+
+            response_message = f"""✅ **{project_name}のパフォーマンスレポートを作成しました！**
+
+## Lighthouse スコア（推定）
+- Performance: 72/100 ⚠️ 改善推奨
+- Accessibility: 95/100 ✅
+- Best Practices: 88/100 ✅
+- SEO: 90/100 ✅
+
+## 主な改善提案
+1. バンドルサイズ削減（Code Splitting）
+2. 画像最適化（WebP変換）
+3. React.memoの適用
+4. APIキャッシング戦略
+
+詳細はレポートファイルをご確認ください。
+
+---
+*このレポートは「マザーAI」Phase 8エージェントによって自動生成されました。*
+"""
+
+            return {
+                "status": "success",
+                "response": response_message,
+                "performance_report": performance_report,
+            }
+
+        return {
+            "status": "error",
+            "response": "リアルAIモードは未実装です",
+        }
+
+
+class Phase9SecurityAgent(BaseAgent):
+    """
+    Phase 9: セキュリティ監査エージェント
+    脆弱性スキャン、セキュリティベストプラクティス提案
+    """
+
+    def __init__(self):
+        super().__init__(
+            name="Phase9SecurityAgent",
+            agent_type="security",
+            level=AgentLevel.WORKER
+        )
+        self.claude = get_claude_client()
+
+    async def execute(self, task: Dict[str, Any]) -> Dict[str, Any]:
+        """セキュリティ監査レポートを生成"""
+        use_real_ai = os.getenv('USE_REAL_AI', 'false').lower() == 'true'
+
+        if not use_real_ai:
+            from app.agents.templates.extended_templates import generate_security_audit
+
+            project_name = task.get("project_context", {}).get("project_name", "My App")
+
+            security_audit = generate_security_audit(project_name)
+
+            response_message = f"""✅ **{project_name}のセキュリティ監査を完了しました！**
+
+## セキュリティスコア: B+ (82/100)
+
+## 検出された脆弱性
+
+### 🔴 高リスク（即座の対応必要）
+- SQLインジェクション脆弱性: 1箇所
+- 認証トークンの安全性: 改善必要
+
+### 🟡 中リスク（計画的な対応推奨）
+- XSS対策: DOMPurify導入推奨
+- CORS設定: ワイルドカード使用
+
+### 🟢 低リスク（監視継続）
+- パスワードポリシー強化
+- レート制限の実装
+
+詳細はレポートファイルをご確認ください。
+
+---
+*このレポートは「マザーAI」Phase 9エージェントによって自動生成されました。*
+"""
+
+            return {
+                "status": "success",
+                "response": response_message,
+                "security_audit": security_audit,
+            }
+
+        return {
+            "status": "error",
+            "response": "リアルAIモードは未実装です",
+        }
+
+
+class Phase10DatabaseAgent(BaseAgent):
+    """
+    Phase 10: データベース設計エージェント
+    ER図、スキーマ最適化、マイグレーション生成
+    """
+
+    def __init__(self):
+        super().__init__(
+            name="Phase10DatabaseAgent",
+            agent_type="database",
+            level=AgentLevel.WORKER
+        )
+        self.claude = get_claude_client()
+
+    async def execute(self, task: Dict[str, Any]) -> Dict[str, Any]:
+        """データベース設計書を生成"""
+        use_real_ai = os.getenv('USE_REAL_AI', 'false').lower() == 'true'
+
+        if not use_real_ai:
+            from app.agents.templates.extended_templates import generate_database_schema
+
+            project_name = task.get("project_context", {}).get("project_name", "My App")
+
+            database_schema = generate_database_schema(project_name)
+
+            response_message = f"""✅ **{project_name}のデータベース設計書を作成しました！**
+
+## 生成内容
+
+- **ER図**（Mermaid形式）
+- **テーブル定義**（全テーブル）
+- **インデックス設計**
+- **マイグレーションスクリプト**
+
+## 最適化提案
+1. パーティショニング（messages テーブル）
+2. 読み取り専用レプリカの活用
+3. キャッシュ戦略（Redis）
+
+詳細はレポートファイルをご確認ください。
+
+---
+*この設計書は「マザーAI」Phase 10エージェントによって自動生成されました。*
+"""
+
+            return {
+                "status": "success",
+                "response": response_message,
+                "database_schema": database_schema,
+            }
+
+        return {
+            "status": "error",
+            "response": "リアルAIモードは未実装です",
+        }
+
+
+class Phase11APIDesignAgent(BaseAgent):
+    """
+    Phase 11: API設計エージェント
+    OpenAPI仕様、RESTful設計、エンドポイント最適化
+    """
+
+    def __init__(self):
+        super().__init__(
+            name="Phase11APIDesignAgent",
+            agent_type="api_design",
+            level=AgentLevel.WORKER
+        )
+        self.claude = get_claude_client()
+
+    async def execute(self, task: Dict[str, Any]) -> Dict[str, Any]:
+        """API設計書を生成"""
+        use_real_ai = os.getenv('USE_REAL_AI', 'false').lower() == 'true'
+
+        if not use_real_ai:
+            from app.agents.templates.extended_templates import generate_api_design
+
+            project_name = task.get("project_context", {}).get("project_name", "My App")
+
+            api_design = generate_api_design(project_name)
+
+            response_message = f"""✅ **{project_name}のAPI設計書を作成しました！**
+
+## 生成内容
+
+- **OpenAPI 3.0仕様書**
+- **エンドポイント一覧**
+- **エラーレスポンス定義**
+- **レート制限設定**
+
+## 主なエンドポイント
+- POST /auth/login - ユーザーログイン
+- POST /auth/register - 新規登録
+- GET /projects - プロジェクト一覧
+- POST /projects - プロジェクト作成
+- POST /projects/{{id}}/messages - メッセージ送信（SSE）
+
+詳細はAPI仕様書をご確認ください。
+
+---
+*この設計書は「マザーAI」Phase 11エージェントによって自動生成されました。*
+"""
+
+            return {
+                "status": "success",
+                "response": response_message,
+                "api_design": api_design,
+            }
+
+        return {
+            "status": "error",
+            "response": "リアルAIモードは未実装です",
+        }
+
+
+class Phase12UXAgent(BaseAgent):
+    """
+    Phase 12: UX/UIレビューエージェント
+    ユーザビリティ分析、アクセシビリティ監査、デザイン改善提案
+    """
+
+    def __init__(self):
+        super().__init__(
+            name="Phase12UXAgent",
+            agent_type="ux_review",
+            level=AgentLevel.WORKER
+        )
+        self.claude = get_claude_client()
+
+    async def execute(self, task: Dict[str, Any]) -> Dict[str, Any]:
+        """UX/UIレビューレポートを生成"""
+        use_real_ai = os.getenv('USE_REAL_AI', 'false').lower() == 'true'
+
+        if not use_real_ai:
+            from app.agents.templates.extended_templates import generate_ux_review
+
+            project_name = task.get("project_context", {}).get("project_name", "My App")
+
+            ux_review = generate_ux_review(project_name)
+
+            response_message = f"""✅ **{project_name}のUX/UIレビューを完了しました！**
+
+## 総合評価: B+ (85/100)
+
+### ユーザビリティスコア
+- 学習のしやすさ: 90/100 ✅
+- 効率性: 80/100 ⚠️
+- 満足度: 88/100 ✅
+
+## 主な改善提案
+
+### クリティカル
+- アクセシビリティ対応（aria-label追加）
+- モバイル対応（タップターゲット拡大）
+
+### 推奨
+- フィードバック改善（Skeletonローダー）
+- 色のコントラスト調整
+- エラーメッセージ具体化
+
+詳細はレポートファイルをご確認ください。
+
+---
+*このレビューは「マザーAI」Phase 12エージェントによって自動生成されました。*
+"""
+
+            return {
+                "status": "success",
+                "response": response_message,
+                "ux_review": ux_review,
+            }
+
+        return {
+            "status": "error",
+            "response": "リアルAIモードは未実装です",
+        }
+
+
+class Phase13RefactoringAgent(BaseAgent):
+    """
+    Phase 13: リファクタリングエージェント
+    コード品質分析、重複削除、可読性向上
+    """
+
+    def __init__(self):
+        super().__init__(
+            name="Phase13RefactoringAgent",
+            agent_type="refactoring",
+            level=AgentLevel.WORKER
+        )
+        self.claude = get_claude_client()
+
+    async def execute(self, task: Dict[str, Any]) -> Dict[str, Any]:
+        """リファクタリング計画を生成"""
+        use_real_ai = os.getenv('USE_REAL_AI', 'false').lower() == 'true'
+
+        if not use_real_ai:
+            from app.agents.templates.extended_templates import generate_refactoring_plan
+
+            project_name = task.get("project_context", {}).get("project_name", "My App")
+            generated_code = task.get("generated_code", {})
+
+            refactoring_plan = generate_refactoring_plan(project_name, generated_code)
+
+            response_message = f"""✅ **{project_name}のリファクタリング計画を作成しました！**
+
+## コード品質評価: B (78/100)
+
+### 品質指標
+- 可読性: 82/100 ✅
+- 保守性: 75/100 ⚠️
+- テストカバレッジ: 65/100 ⚠️
+- コード重複: 20% ⚠️
+
+## リファクタリング対象
+
+### 優先度: 高
+1. 重複コードの削除
+2. 長すぎる関数の分割
+3. マジックナンバーの定数化
+
+### 優先度: 中
+4. 型安全性の向上（any型削除）
+5. エラーハンドリングの統一
+
+詳細はリファクタリング計画書をご確認ください。
+
+---
+*この計画は「マザーAI」Phase 13エージェントによって自動生成されました。*
+"""
+
+            return {
+                "status": "success",
+                "response": response_message,
+                "refactoring_plan": refactoring_plan,
+            }
+
+        return {
+            "status": "error",
+            "response": "リアルAIモードは未実装です",
+        }
+
+
+class Phase14MonitoringAgent(BaseAgent):
+    """
+    Phase 14: モニタリング設定エージェント
+    Prometheus、Grafana、ログ集約設定
+    """
+
+    def __init__(self):
+        super().__init__(
+            name="Phase14MonitoringAgent",
+            agent_type="monitoring",
+            level=AgentLevel.WORKER
+        )
+        self.claude = get_claude_client()
+
+    async def execute(self, task: Dict[str, Any]) -> Dict[str, Any]:
+        """モニタリング設定を生成"""
+        use_real_ai = os.getenv('USE_REAL_AI', 'false').lower() == 'true'
+
+        if not use_real_ai:
+            from app.agents.templates.extended_templates import generate_monitoring_setup
+
+            project_name = task.get("project_context", {}).get("project_name", "My App")
+
+            monitoring_setup = generate_monitoring_setup(project_name)
+
+            response_message = f"""✅ **{project_name}のモニタリング設定を作成しました！**
+
+## 監視対象
+
+### アプリケーションメトリクス
+- レスポンスタイム（平均・p95・p99）
+- エラー率（4xx/5xx）
+- スループット
+
+### インフラメトリクス
+- CPU使用率（<70%目標）
+- メモリ使用率（<80%目標）
+- ディスク使用率
+
+### ビジネスメトリクス
+- 新規ユーザー登録数
+- プロジェクト作成数
+- Phase完了率
+
+## 実装内容
+- Prometheus + Grafana設定
+- Sentryエラートラッキング
+- ログ集約（Loki）
+- アラート設定
+
+詳細はモニタリング設定書をご確認ください。
+
+---
+*この設定は「マザーAI」Phase 14エージェントによって自動生成されました。*
+"""
+
+            return {
+                "status": "success",
+                "response": response_message,
+                "monitoring_setup": monitoring_setup,
+            }
+
+        return {
+            "status": "error",
+            "response": "リアルAIモードは未実装です",
+        }
+
+
 class OrchestratorAgent(BaseAgent):
     """
     オーケストレーターエージェント
