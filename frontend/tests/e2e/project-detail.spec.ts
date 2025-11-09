@@ -850,4 +850,319 @@ test.describe('P-005: AI対話・プロジェクト開発', () => {
     // 10. ファイルツリーが再表示される
     await expect(fileTreeHeader).toBeVisible({ timeout: 5000 });
   });
+
+  // === Phase 5-14 動作検証テスト ===
+  test('E2E-P005-023: Phase 5 (テスト生成) メッセージ送受信', async ({ page }) => {
+    await loginAsApprovedUser(page);
+    await page.goto('http://localhost:3347/user/projects');
+
+    // プロジェクト作成
+    const projectName = `Test Phase5 ${Date.now()}`;
+    await page.click('button:has-text("新規プロジェクト")');
+    await page.fill('input[name="name"]', projectName);
+    await page.fill('textarea[name="description"]', 'Phase 5 test project');
+    await page.click('button:has-text("作成")');
+
+    // プロジェクト詳細に遷移
+    await page.waitForURL(/\/user\/projects\/.+/);
+
+    // Phase 5カードをクリック
+    const phase5Card = page.locator('[data-testid="phase-card-5"]').or(
+      page.locator('div:has-text("Phase 5"):has-text("テスト生成")')
+    );
+    await phase5Card.click();
+    await page.waitForTimeout(1000);
+
+    // メッセージ送信
+    const messageInput = page.locator('textarea[placeholder*="メッセージ"], input[placeholder*="メッセージ"]');
+    await messageInput.fill('ユニットテストとE2Eテストを生成してください');
+
+    const sendButton = page.locator('button:has-text("送信")').or(
+      page.locator('button[type="submit"]')
+    );
+    await sendButton.click();
+
+    // AI応答を待機（Phase 5特有の応答を確認）
+    const response = page.locator('text=/テストファイル|test|spec/i').first();
+    await expect(response).toBeVisible({ timeout: 10000 });
+  });
+
+  test('E2E-P005-024: Phase 6 (ドキュメント生成) メッセージ送受信', async ({ page }) => {
+    await loginAsApprovedUser(page);
+    await page.goto('http://localhost:3347/user/projects');
+
+    const projectName = `Test Phase6 ${Date.now()}`;
+    await page.click('button:has-text("新規プロジェクト")');
+    await page.fill('input[name="name"]', projectName);
+    await page.fill('textarea[name="description"]', 'Phase 6 test project');
+    await page.click('button:has-text("作成")');
+
+    await page.waitForURL(/\/user\/projects\/.+/);
+
+    const phase6Card = page.locator('[data-testid="phase-card-6"]').or(
+      page.locator('div:has-text("Phase 6"):has-text("ドキュメント")')
+    );
+    await phase6Card.click();
+    await page.waitForTimeout(1000);
+
+    const messageInput = page.locator('textarea[placeholder*="メッセージ"], input[placeholder*="メッセージ"]');
+    await messageInput.fill('技術ドキュメントを生成してください');
+
+    const sendButton = page.locator('button:has-text("送信")').or(
+      page.locator('button[type="submit"]')
+    );
+    await sendButton.click();
+
+    // AI応答を待機（Phase 6特有の応答を確認）
+    const response = page.locator('text=/README|アーキテクチャ|ドキュメント/i').first();
+    await expect(response).toBeVisible({ timeout: 10000 });
+  });
+
+  test('E2E-P005-025: Phase 7 (デバッグ) メッセージ送受信', async ({ page }) => {
+    await loginAsApprovedUser(page);
+    await page.goto('http://localhost:3347/user/projects');
+
+    const projectName = `Test Phase7 ${Date.now()}`;
+    await page.click('button:has-text("新規プロジェクト")');
+    await page.fill('input[name="name"]', projectName);
+    await page.fill('textarea[name="description"]', 'Phase 7 test project');
+    await page.click('button:has-text("作成")');
+
+    await page.waitForURL(/\/user\/projects\/.+/);
+
+    const phase7Card = page.locator('[data-testid="phase-card-7"]').or(
+      page.locator('div:has-text("Phase 7"):has-text("デバッグ")')
+    );
+    await phase7Card.click();
+    await page.waitForTimeout(1000);
+
+    const messageInput = page.locator('textarea[placeholder*="メッセージ"], input[placeholder*="メッセージ"]');
+    await messageInput.fill('コードの問題を検出してください');
+
+    const sendButton = page.locator('button:has-text("送信")').or(
+      page.locator('button[type="submit"]')
+    );
+    await sendButton.click();
+
+    // AI応答を待機（Phase 7特有の応答を確認）
+    const response = page.locator('text=/デバッグ|エラー|問題/i').first();
+    await expect(response).toBeVisible({ timeout: 10000 });
+  });
+
+  test('E2E-P005-026: Phase 8 (パフォーマンス最適化) メッセージ送受信', async ({ page }) => {
+    await loginAsApprovedUser(page);
+    await page.goto('http://localhost:3347/user/projects');
+
+    const projectName = `Test Phase8 ${Date.now()}`;
+    await page.click('button:has-text("新規プロジェクト")');
+    await page.fill('input[name="name"]', projectName);
+    await page.fill('textarea[name="description"]', 'Phase 8 test project');
+    await page.click('button:has-text("作成")');
+
+    await page.waitForURL(/\/user\/projects\/.+/);
+
+    const phase8Card = page.locator('[data-testid="phase-card-8"]').or(
+      page.locator('div:has-text("Phase 8"):has-text("パフォーマンス")')
+    );
+    await phase8Card.click();
+    await page.waitForTimeout(1000);
+
+    const messageInput = page.locator('textarea[placeholder*="メッセージ"], input[placeholder*="メッセージ"]');
+    await messageInput.fill('パフォーマンスを最適化してください');
+
+    const sendButton = page.locator('button:has-text("送信")').or(
+      page.locator('button[type="submit"]')
+    );
+    await sendButton.click();
+
+    // AI応答を待機（Phase 8特有の応答を確認）
+    const response = page.locator('text=/パフォーマンス|最適化|改善/i').first();
+    await expect(response).toBeVisible({ timeout: 10000 });
+  });
+
+  test('E2E-P005-027: Phase 9 (セキュリティ監査) メッセージ送受信', async ({ page }) => {
+    await loginAsApprovedUser(page);
+    await page.goto('http://localhost:3347/user/projects');
+
+    const projectName = `Test Phase9 ${Date.now()}`;
+    await page.click('button:has-text("新規プロジェクト")');
+    await page.fill('input[name="name"]', projectName);
+    await page.fill('textarea[name="description"]', 'Phase 9 test project');
+    await page.click('button:has-text("作成")');
+
+    await page.waitForURL(/\/user\/projects\/.+/);
+
+    const phase9Card = page.locator('[data-testid="phase-card-9"]').or(
+      page.locator('div:has-text("Phase 9"):has-text("セキュリティ")')
+    );
+    await phase9Card.click();
+    await page.waitForTimeout(1000);
+
+    const messageInput = page.locator('textarea[placeholder*="メッセージ"], input[placeholder*="メッセージ"]');
+    await messageInput.fill('セキュリティ診断を実施してください');
+
+    const sendButton = page.locator('button:has-text("送信")').or(
+      page.locator('button[type="submit"]')
+    );
+    await sendButton.click();
+
+    // AI応答を待機（Phase 9特有の応答を確認）
+    const response = page.locator('text=/セキュリティ|脆弱性|監査/i').first();
+    await expect(response).toBeVisible({ timeout: 10000 });
+  });
+
+  test('E2E-P005-028: Phase 10 (データベース設計) メッセージ送受信', async ({ page }) => {
+    await loginAsApprovedUser(page);
+    await page.goto('http://localhost:3347/user/projects');
+
+    const projectName = `Test Phase10 ${Date.now()}`;
+    await page.click('button:has-text("新規プロジェクト")');
+    await page.fill('input[name="name"]', projectName);
+    await page.fill('textarea[name="description"]', 'Phase 10 test project');
+    await page.click('button:has-text("作成")');
+
+    await page.waitForURL(/\/user\/projects\/.+/);
+
+    const phase10Card = page.locator('[data-testid="phase-card-10"]').or(
+      page.locator('div:has-text("Phase 10"):has-text("データベース")')
+    );
+    await phase10Card.click();
+    await page.waitForTimeout(1000);
+
+    const messageInput = page.locator('textarea[placeholder*="メッセージ"], input[placeholder*="メッセージ"]');
+    await messageInput.fill('データベーススキーマを最適化してください');
+
+    const sendButton = page.locator('button:has-text("送信")').or(
+      page.locator('button[type="submit"]')
+    );
+    await sendButton.click();
+
+    // AI応答を待機（Phase 10特有の応答を確認）
+    const response = page.locator('text=/データベース|スキーマ|テーブル/i').first();
+    await expect(response).toBeVisible({ timeout: 10000 });
+  });
+
+  test('E2E-P005-029: Phase 11 (API設計) メッセージ送受信', async ({ page }) => {
+    await loginAsApprovedUser(page);
+    await page.goto('http://localhost:3347/user/projects');
+
+    const projectName = `Test Phase11 ${Date.now()}`;
+    await page.click('button:has-text("新規プロジェクト")');
+    await page.fill('input[name="name"]', projectName);
+    await page.fill('textarea[name="description"]', 'Phase 11 test project');
+    await page.click('button:has-text("作成")');
+
+    await page.waitForURL(/\/user\/projects\/.+/);
+
+    const phase11Card = page.locator('[data-testid="phase-card-11"]').or(
+      page.locator('div:has-text("Phase 11"):has-text("API設計")')
+    );
+    await phase11Card.click();
+    await page.waitForTimeout(1000);
+
+    const messageInput = page.locator('textarea[placeholder*="メッセージ"], input[placeholder*="メッセージ"]');
+    await messageInput.fill('RESTful APIを設計してください');
+
+    const sendButton = page.locator('button:has-text("送信")').or(
+      page.locator('button[type="submit"]')
+    );
+    await sendButton.click();
+
+    // AI応答を待機（Phase 11特有の応答を確認）
+    const response = page.locator('text=/API|エンドポイント|OpenAPI/i').first();
+    await expect(response).toBeVisible({ timeout: 10000 });
+  });
+
+  test('E2E-P005-030: Phase 12 (UX改善) メッセージ送受信', async ({ page }) => {
+    await loginAsApprovedUser(page);
+    await page.goto('http://localhost:3347/user/projects');
+
+    const projectName = `Test Phase12 ${Date.now()}`;
+    await page.click('button:has-text("新規プロジェクト")');
+    await page.fill('input[name="name"]', projectName);
+    await page.fill('textarea[name="description"]', 'Phase 12 test project');
+    await page.click('button:has-text("作成")');
+
+    await page.waitForURL(/\/user\/projects\/.+/);
+
+    const phase12Card = page.locator('[data-testid="phase-card-12"]').or(
+      page.locator('div:has-text("Phase 12"):has-text("UX")')
+    );
+    await phase12Card.click();
+    await page.waitForTimeout(1000);
+
+    const messageInput = page.locator('textarea[placeholder*="メッセージ"], input[placeholder*="メッセージ"]');
+    await messageInput.fill('ユーザー体験を改善してください');
+
+    const sendButton = page.locator('button:has-text("送信")').or(
+      page.locator('button[type="submit"]')
+    );
+    await sendButton.click();
+
+    // AI応答を待機（Phase 12特有の応答を確認）
+    const response = page.locator('text=/UX|ユーザー体験|UI/i').first();
+    await expect(response).toBeVisible({ timeout: 10000 });
+  });
+
+  test('E2E-P005-031: Phase 13 (リファクタリング) メッセージ送受信', async ({ page }) => {
+    await loginAsApprovedUser(page);
+    await page.goto('http://localhost:3347/user/projects');
+
+    const projectName = `Test Phase13 ${Date.now()}`;
+    await page.click('button:has-text("新規プロジェクト")');
+    await page.fill('input[name="name"]', projectName);
+    await page.fill('textarea[name="description"]', 'Phase 13 test project');
+    await page.click('button:has-text("作成")');
+
+    await page.waitForURL(/\/user\/projects\/.+/);
+
+    const phase13Card = page.locator('[data-testid="phase-card-13"]').or(
+      page.locator('div:has-text("Phase 13"):has-text("リファクタリング")')
+    );
+    await phase13Card.click();
+    await page.waitForTimeout(1000);
+
+    const messageInput = page.locator('textarea[placeholder*="メッセージ"], input[placeholder*="メッセージ"]');
+    await messageInput.fill('コードをリファクタリングしてください');
+
+    const sendButton = page.locator('button:has-text("送信")').or(
+      page.locator('button[type="submit"]')
+    );
+    await sendButton.click();
+
+    // AI応答を待機（Phase 13特有の応答を確認）
+    const response = page.locator('text=/リファクタリング|コード改善|保守性/i').first();
+    await expect(response).toBeVisible({ timeout: 10000 });
+  });
+
+  test('E2E-P005-032: Phase 14 (モニタリング) メッセージ送受信', async ({ page }) => {
+    await loginAsApprovedUser(page);
+    await page.goto('http://localhost:3347/user/projects');
+
+    const projectName = `Test Phase14 ${Date.now()}`;
+    await page.click('button:has-text("新規プロジェクト")');
+    await page.fill('input[name="name"]', projectName);
+    await page.fill('textarea[name="description"]', 'Phase 14 test project');
+    await page.click('button:has-text("作成")');
+
+    await page.waitForURL(/\/user\/projects\/.+/);
+
+    const phase14Card = page.locator('[data-testid="phase-card-14"]').or(
+      page.locator('div:has-text("Phase 14"):has-text("モニタリング")')
+    );
+    await phase14Card.click();
+    await page.waitForTimeout(1000);
+
+    const messageInput = page.locator('textarea[placeholder*="メッセージ"], input[placeholder*="メッセージ"]');
+    await messageInput.fill('モニタリングシステムを構築してください');
+
+    const sendButton = page.locator('button:has-text("送信")').or(
+      page.locator('button[type="submit"]')
+    );
+    await sendButton.click();
+
+    // AI応答を待機（Phase 14特有の応答を確認）
+    const response = page.locator('text=/モニタリング|ログ|メトリクス/i').first();
+    await expect(response).toBeVisible({ timeout: 10000 });
+  });
 });

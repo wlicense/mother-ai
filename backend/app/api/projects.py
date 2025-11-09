@@ -182,6 +182,18 @@ async def send_message(
                 Phase3DeploymentAgent,
                 Phase4SelfImprovementAgent
             )
+            from app.agents.extended_phase_agents import (
+                Phase5TestGenerationAgent,
+                Phase6DocumentationAgent,
+                Phase7DebugAgent,
+                Phase8PerformanceAgent,
+                Phase9SecurityAgent,
+                Phase10DatabaseAgent,
+                Phase11APIDesignAgent,
+                Phase12UXAgent,
+                Phase13RefactoringAgent,
+                Phase14MonitoringAgent
+            )
 
             # Phaseに応じてエージェントを選択
             agent_map = {
@@ -189,6 +201,16 @@ async def send_message(
                 2: Phase2CodeGenerationAgent(),
                 3: Phase3DeploymentAgent(),
                 4: Phase4SelfImprovementAgent(),
+                5: Phase5TestGenerationAgent(),
+                6: Phase6DocumentationAgent(),
+                7: Phase7DebugAgent(),
+                8: Phase8PerformanceAgent(),
+                9: Phase9SecurityAgent(),
+                10: Phase10DatabaseAgent(),
+                11: Phase11APIDesignAgent(),
+                12: Phase12UXAgent(),
+                13: Phase13RefactoringAgent(),
+                14: Phase14MonitoringAgent(),
             }
 
             agent = agent_map.get(request.phase, Phase1RequirementsAgent())
