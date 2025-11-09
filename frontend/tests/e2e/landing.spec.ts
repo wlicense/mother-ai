@@ -82,4 +82,46 @@ test.describe('P-001: ランディングページ', () => {
     const emailInput = page.locator('input[type="email"]').first();
     await expect(emailInput).toBeVisible();
   });
+
+  /**
+   * E2E-P001-004: 機能紹介セクション表示
+   *
+   * 期待結果:
+   * - Phase 1-14の機能紹介カードが表示される
+   */
+  test('E2E-P001-004: 機能紹介セクション表示', async ({ page }) => {
+    // 1. / にアクセス
+    await page.goto('/');
+
+    // 2. 機能カードが複数表示されることを確認
+    const featureCards = page.locator('.MuiCard-root');
+    const cardCount = await featureCards.count();
+    expect(cardCount).toBeGreaterThan(0);
+
+    // 3. 主要な機能説明のいずれかが表示されることを確認
+    const mainFeatures = page.locator('text=/要件定義|コード生成|デプロイ|Phase/i').first();
+    await expect(mainFeatures).toBeVisible({ timeout: 5000 });
+  });
+
+  /**
+   * E2E-P001-101: レスポンシブデザイン検証（モバイル）
+   *
+   * 期待結果:
+   * - モバイルサイズでもコンテンツが正常に表示される
+   */
+  test('E2E-P001-101: レスポンシブデザイン検証', async ({ page }) => {
+    // 1. モバイルビューポートに設定
+    await page.setViewportSize({ width: 375, height: 667 });
+
+    // 2. / にアクセス
+    await page.goto('/');
+
+    // 3. サービス名が表示されることを確認
+    const serviceName = page.locator('text=/マザーAI|Mother AI/i').first();
+    await expect(serviceName).toBeVisible({ timeout: 5000 });
+
+    // 4. CTAボタンが表示されることを確認
+    const applyButton = page.getByRole('button', { name: /利用申請/i }).first();
+    await expect(applyButton).toBeVisible();
+  });
 });
