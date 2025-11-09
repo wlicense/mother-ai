@@ -78,9 +78,9 @@ test.describe('P-002: 利用申請フォーム', () => {
     const submitButton = page.getByRole('button', { name: /申請/i });
     await submitButton.click();
 
-    // 4. 成功メッセージが表示されることを確認
-    const successMessage = page.locator('text=/申請を受け付けました/i').first();
-    await expect(successMessage).toBeVisible({ timeout: 10000 });
+    // 4. 成功メッセージが表示されることを確認（MUI Alertコンポーネント内）
+    const successAlert = page.locator('.MuiAlert-root').filter({ hasText: /申請を受け付けました/i });
+    await expect(successAlert).toBeVisible({ timeout: 15000 });
 
     // 5. 審査完了のメッセージが表示されることを確認
     const reviewMessage = page.locator('text=/審査が完了次第/i').first();

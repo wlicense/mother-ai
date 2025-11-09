@@ -85,14 +85,17 @@ test.describe('P-004: プロジェクト一覧・管理', () => {
     // 6. ダイアログが閉じられることを確認
     await expect(dialogTitle).not.toBeVisible({ timeout: 5000 });
 
-    // 7. プロジェクト一覧ページに留まることを確認
-    await expect(page).toHaveURL(/.*projects$/, { timeout: 5000 });
+    // 7. 自動的にプロジェクト詳細ページに遷移することを確認
+    await expect(page).toHaveURL(/.*projects\/[a-zA-Z0-9-]+$/, { timeout: 5000 });
 
-    // 8. 作成したプロジェクトが一覧に表示されることを確認
+    // 8. プロジェクト一覧に戻る
+    await page.goto('/projects');
+
+    // 9. 作成したプロジェクトが一覧に表示されることを確認
     const projectCard = page.locator('text=E2Eテストプロジェクト').first();
     await expect(projectCard).toBeVisible({ timeout: 5000 });
 
-    // 9. Phase 1が表示されることを確認
+    // 10. Phase 1が表示されることを確認
     const phase1Chip = page.locator('text=/Phase 1/i').first();
     await expect(phase1Chip).toBeVisible({ timeout: 5000 });
   });
@@ -127,6 +130,9 @@ test.describe('P-004: プロジェクト一覧・管理', () => {
     await submitButton.click();
 
     await expect(dialogTitle).not.toBeVisible({ timeout: 5000 });
+
+    // 自動的にプロジェクト詳細ページに遷移するので、一覧ページに戻る
+    await page.goto('/projects');
 
     // 3. 削除ボタンをクリック
     const projectCard = page.locator('text=' + testProjectName).first();
@@ -248,6 +254,9 @@ test.describe('P-004: プロジェクト一覧・管理', () => {
     const submitButton = page.getByRole('button', { name: '作成', exact: true });
     await submitButton.click();
     await expect(dialogTitle).not.toBeVisible({ timeout: 5000 });
+
+    // 自動的にプロジェクト詳細ページに遷移するので、一覧ページに戻る
+    await page.goto('/projects');
 
     // 3. 削除ボタンをクリック
     const deleteButton = page.getByRole('button', { name: '削除' }).first();

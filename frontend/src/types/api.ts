@@ -96,19 +96,43 @@ export interface UserListResponse {
   total: number;
 }
 
+export interface PhaseStats {
+  phase: number;
+  total_requests: number;
+  total_cost: number;
+  total_tokens: number;
+}
+
+export interface TodayPhaseStats {
+  phase: number;
+  requests: number;
+  cost: number;
+}
+
+export interface CacheStats {
+  total_cached_requests: number;
+  total_cache_hit_rate: number;
+  today_cached_requests: number;
+  today_cache_hit_rate: number;
+}
+
 export interface APIMonitorStatsResponse {
   total_requests: number;
   total_cost: number;
+  total_tokens: number;
   today_requests: number;
   today_cost: number;
-  monthly_requests: number;
-  monthly_cost: number;
+  monthly_requests?: number;
+  monthly_cost?: number;
   top_users: Array<{
     user_id: string;
     user_name: string;
     total_requests: number;
     total_cost: number;
   }>;
+  phase_stats: PhaseStats[];
+  today_phase_stats: TodayPhaseStats[];
+  cache_stats: CacheStats;
 }
 
 // ================================

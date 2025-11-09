@@ -254,6 +254,20 @@ async def get_api_stats(
         for row in today_phase_stats_query
     ]
 
+    # キャッシュ統計
+    total_cached_requests = db.query(func.count(ApiLog.id)).filter(
+        ApiLog.cached == True
+    ).scalar() or 0
+
+    today_cached_requests = db.query(func.count(ApiLog.id)).filter(
+        ApiLog.cached == True,
+        ApiLog.created_at >= today_start
+    ).scalar() or 0
+
+    # キャッシュヒット率の計算
+    cache_hit_rate = (total_cached_requests / total_requests * 100) if total_requests > 0 else 0.0
+    today_cache_hit_rate = (today_cached_requests / today_requests * 100) if today_requests > 0 else 0.0
+
     return {
         "total_requests": total_requests,
         "total_cost": float(total_cost) if total_cost else 0.0,
@@ -263,4 +277,10 @@ async def get_api_stats(
         "top_users": top_users,
         "phase_stats": phase_stats,
         "today_phase_stats": today_phase_stats,
+        "cache_stats": {
+            "total_cached_requests": total_cached_requests,
+            "total_cache_hit_rate": round(cache_hit_rate, 2),
+            "today_cached_requests": today_cached_requests,
+            "today_cache_hit_rate": round(today_cache_hit_rate, 2),
+        },
     }

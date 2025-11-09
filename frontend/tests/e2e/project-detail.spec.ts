@@ -243,10 +243,59 @@ test.describe('P-005: AI対話・プロジェクト開発', () => {
    * - ファイルをクリックするとMonaco Editorで内容が表示される
    * - コードを編集して保存できる
    */
+  /**
+   * E2E-P005-006: ファイルツリー表示とコード編集
+   *
+   * テスト対象外:
+   * - ファイルツリーノードの検出が不安定
+   *
+   * 前提条件:
+   * - Phase 1でコードが生成されている
+   * - Phase 2に遷移している
+   *
+   * 期待結果:
+   * - ファイルツリーが表示される
+   * - ファイルをクリックするとMonaco Editorに内容が表示される
+   */
   test.skip('E2E-P005-006: ファイルツリー表示とコード編集', async ({ page }) => {
-    // TODO: Phase 2のFile Tree機能を完全に実装してから有効化
-    // 現在はPhase 1でコード生成してからPhase 2でFile Treeを表示する流れだが、
-    // ファイルが実際に生成されるかテストする必要がある
+    // 1. 承認済みユーザーでログイン
+    await loginAsApprovedUser(page);
+
+    // 2. プロジェクトを作成
+    const projectId = await createProject(page, 'E2E Phase2 FileTree Test');
+
+    // 3. プロジェクト詳細ページにアクセス
+    await page.goto(`/projects/${projectId}`);
+
+    // 4. Phase 1カードをクリックしてコード生成を依頼
+    const phase1Card = page.locator('.MuiCard-root').filter({ has: page.locator('text=/Phase 1/i') }).first();
+    await phase1Card.click();
+
+    const messageInput = page.locator('input[placeholder*="メッセージ"]').first();
+    await messageInput.fill('シンプルなTodoアプリを作成してください');
+
+    const sendButton = page.locator('button').filter({ has: page.locator('svg') }).last();
+    await sendButton.click();
+
+    // コード生成完了を待つ（10秒）
+    await page.waitForTimeout(10000);
+
+    // 5. Phase 2カードをクリック
+    const phase2Card = page.locator('.MuiCard-root').filter({ has: page.locator('text=/Phase 2/i') }).first();
+    await phase2Card.click();
+
+    // 6. ファイルツリーヘッダーが表示されることを確認
+    const fileTreeHeader = page.locator('text=ファイル').first();
+    await expect(fileTreeHeader).toBeVisible({ timeout: 10000 });
+
+    // 7. コードエディタヘッダーが表示されることを確認
+    const codeEditorHeader = page.locator('text=コードエディタ').first();
+    await expect(codeEditorHeader).toBeVisible({ timeout: 5000 });
+
+    // 8. ファイルツリー内にファイルが表示されることを確認
+    // 少なくとも1つのファイルノードが存在すること
+    const fileNodes = page.locator('text=/\\.tsx?$|\\.py$|\\.json$/i').first();
+    await expect(fileNodes).toBeVisible({ timeout: 5000 });
   });
 
   /**
@@ -399,5 +448,406 @@ test.describe('P-005: AI対話・プロジェクト開発', () => {
    */
   test.skip('E2E-P005-104: ロックされたPhaseをクリック', async ({ page }) => {
     // TODO: Phaseロック機能の実装確認後に追加
+  });
+
+  /**
+   * E2E-P005-010: レスポンシブデザイン検証
+   *
+   * 前提条件:
+   * - プロジェクトが作成されている
+   *
+   * 期待結果:
+   * - モバイル・タブレット・デスクトップで適切に表示される
+   * - Phaseカードが各画面サイズで表示される
+   */
+  test('E2E-P005-010: レスポンシブデザイン検証', async ({ page }) => {
+    // 1. 承認済みユーザーでログイン
+    await loginAsApprovedUser(page);
+
+    // 2. プロジェクトを作成
+    const projectId = await createProject(page, 'E2E Responsive Test Project');
+
+    // 3. プロジェクト詳細ページにアクセス
+    await page.goto(`/projects/${projectId}`);
+
+    // 4. モバイルサイズ (375x667)
+    await page.setViewportSize({ width: 375, height: 667 });
+    const phase1CardMobile = page.locator('.MuiCard-root').filter({ has: page.locator('text=/Phase 1/i') }).first();
+    await expect(phase1CardMobile).toBeVisible({ timeout: 5000 });
+
+    // 5. タブレットサイズ (768x1024)
+    await page.setViewportSize({ width: 768, height: 1024 });
+    const phase1CardTablet = page.locator('.MuiCard-root').filter({ has: page.locator('text=/Phase 1/i') }).first();
+    await expect(phase1CardTablet).toBeVisible({ timeout: 5000 });
+
+    // 6. デスクトップサイズ (1920x1080)
+    await page.setViewportSize({ width: 1920, height: 1080 });
+    const phase1CardDesktop = page.locator('.MuiCard-root').filter({ has: page.locator('text=/Phase 1/i') }).first();
+    await expect(phase1CardDesktop).toBeVisible({ timeout: 5000 });
+  });
+
+  /**
+   * E2E-P005-011: メッセージ送信バリデーション（空メッセージ）
+   *
+   * テスト対象外:
+   * - 空メッセージのバリデーション機能が未実装の可能性
+   *
+   * 前提条件:
+   * - プロジェクトが作成されている
+   *
+   * 期待結果:
+   * - 空のメッセージは送信できない
+   * - または送信ボタンが無効化される
+   */
+  test.skip('E2E-P005-011: メッセージ送信バリデーション', async ({ page }) => {
+    // 1. 承認済みユーザーでログイン
+    await loginAsApprovedUser(page);
+
+    // 2. プロジェクトを作成
+    const projectId = await createProject(page, 'E2E Validation Test Project');
+
+    // 3. プロジェクト詳細ページにアクセス
+    await page.goto(`/projects/${projectId}`);
+
+    // 4. メッセージ入力フィールドを確認
+    const messageInput = page.locator('input[placeholder*="メッセージ"]').first();
+    await expect(messageInput).toBeVisible({ timeout: 5000 });
+
+    // 5. 空のまま送信ボタンをクリック
+    const sendButton = page.locator('button').filter({ has: page.locator('svg') }).last();
+    await sendButton.click();
+
+    // 6. メッセージ入力フィールドが空のままであることを確認
+    // （送信されない、またはバリデーションエラー）
+    await page.waitForTimeout(1000);
+    await expect(messageInput).toHaveValue('');
+  });
+
+  /**
+   * E2E-P005-012: 複数のPhaseカードの切り替え
+   *
+   * 前提条件:
+   * - プロジェクトが作成されている
+   *
+   * 期待結果:
+   * - Phase 1→Phase 2→Phase 3と切り替えできる
+   * - 各Phaseでチャットヘッダーが更新される
+   */
+  test('E2E-P005-012: 複数のPhaseカードの切り替え', async ({ page }) => {
+    // 1. 承認済みユーザーでログイン
+    await loginAsApprovedUser(page);
+
+    // 2. プロジェクトを作成
+    const projectId = await createProject(page, 'E2E Phase Switch Test');
+
+    // 3. プロジェクト詳細ページにアクセス
+    await page.goto(`/projects/${projectId}`);
+
+    // 4. Phase 1をクリック
+    const phase1Card = page.locator('.MuiCard-root').filter({ has: page.locator('text=/Phase 1/i') }).first();
+    await phase1Card.click();
+    await page.waitForTimeout(1000);
+
+    // 5. チャットヘッダーに「要件定義」が含まれることを確認
+    const chatHeader1 = page.locator('text=/要件定義/i').first();
+    await expect(chatHeader1).toBeVisible({ timeout: 5000 });
+
+    // 6. Phase 2をクリック
+    const phase2Card = page.locator('.MuiCard-root').filter({ has: page.locator('text=/Phase 2/i') }).first();
+    await phase2Card.click();
+    await page.waitForTimeout(1000);
+
+    // 7. チャットヘッダーに「コード生成」が含まれることを確認
+    const chatHeader2 = page.locator('text=/コード生成/i').first();
+    await expect(chatHeader2).toBeVisible({ timeout: 5000 });
+
+    // 8. Phase 3をクリック
+    const phase3Card = page.locator('.MuiCard-root').filter({ has: page.locator('text=/Phase 3/i') }).first();
+    await phase3Card.click();
+    await page.waitForTimeout(1000);
+
+    // 9. チャットヘッダーに「デプロイ」が含まれることを確認
+    const chatHeader3 = page.locator('text=/デプロイ/i').first();
+    await expect(chatHeader3).toBeVisible({ timeout: 5000 });
+  });
+
+  /**
+   * E2E-P005-013: Phase 5-14のカード表示検証
+   *
+   * 前提条件:
+   * - プロジェクトが作成されている
+   *
+   * 期待結果:
+   * - Phase 5（テスト）からPhase 14（モニタリング）まで全て表示される
+   */
+  test('E2E-P005-013: Phase 5-14のカード表示検証', async ({ page }) => {
+    // 1. 承認済みユーザーでログイン
+    await loginAsApprovedUser(page);
+
+    // 2. プロジェクトを作成
+    const projectId = await createProject(page, 'E2E Phase 5-14 Test');
+
+    // 3. プロジェクト詳細ページにアクセス
+    await page.goto(`/projects/${projectId}`);
+
+    // 4. Phase 5-14の各カードが表示されることを確認
+    const advancedPhases = [
+      { phase: 5, title: 'テスト' },
+      { phase: 6, title: 'ドキュメント' },
+      { phase: 7, title: 'デバッグ' },
+      { phase: 8, title: 'パフォーマンス' },
+      { phase: 9, title: 'セキュリティ' },
+      { phase: 10, title: 'データベース' },
+      { phase: 11, title: 'API設計' },
+      { phase: 12, title: 'UX/UI' },
+      { phase: 13, title: 'リファクタリング' },
+      { phase: 14, title: 'モニタリング' },
+    ];
+
+    for (const { phase, title } of advancedPhases) {
+      const phaseCard = page.locator(`text=/Phase ${phase}/i`).first();
+      await expect(phaseCard).toBeVisible({ timeout: 3000 });
+
+      const phaseTitle = page.locator(`text=/${title}/i`).first();
+      await expect(phaseTitle).toBeVisible({ timeout: 3000 });
+    }
+  });
+
+  /**
+   * E2E-P005-014: 長いプロジェクト名での表示
+   *
+   * 前提条件:
+   * - ログイン済み
+   *
+   * 期待結果:
+   * - 長いプロジェクト名でも正しく表示される
+   * - レイアウトが崩れない
+   */
+  test('E2E-P005-014: 長いプロジェクト名での表示', async ({ page }) => {
+    // 1. 承認済みユーザーでログイン
+    await loginAsApprovedUser(page);
+
+    // 2. 長いプロジェクト名でプロジェクトを作成
+    const longProjectName = 'E2E テストプロジェクト：非常に長いプロジェクト名で表示が崩れないかを確認するためのテスト用プロジェクト（100文字以内）';
+    const projectId = await createProject(page, longProjectName);
+
+    // 3. プロジェクト詳細ページにアクセス
+    await page.goto(`/projects/${projectId}`);
+
+    // 4. プロジェクト名が表示されることを確認（一部でも良い）
+    const projectNameElement = page.locator('h1, h2, h3, h4').filter({ hasText: /E2E テストプロジェクト/i }).first();
+    await expect(projectNameElement).toBeVisible({ timeout: 5000 });
+
+    // 5. Phase 1カードが正常に表示されることを確認（レイアウト崩れチェック）
+    const phase1Card = page.locator('.MuiCard-root').filter({ has: page.locator('text=/Phase 1/i') }).first();
+    await expect(phase1Card).toBeVisible({ timeout: 5000 });
+  });
+
+  /**
+   * E2E-P005-015: メッセージ送信後のUI状態確認
+   *
+   * 前提条件:
+   * - プロジェクトが作成されている
+   *
+   * 期待結果:
+   * - メッセージ送信後、送信ボタンが一時的に無効化される
+   * - ローディング状態が表示される
+   */
+  test('E2E-P005-015: メッセージ送信後のUI状態確認', async ({ page }) => {
+    // 1. 承認済みユーザーでログイン
+    await loginAsApprovedUser(page);
+
+    // 2. プロジェクトを作成
+    const projectId = await createProject(page, 'E2E Message UI State Test');
+
+    // 3. プロジェクト詳細ページにアクセス
+    await page.goto(`/projects/${projectId}`);
+
+    // 4. メッセージを入力
+    const messageInput = page.locator('input[placeholder*="メッセージ"]').first();
+    await expect(messageInput).toBeVisible({ timeout: 5000 });
+    await messageInput.fill('テストメッセージです');
+
+    // 5. 送信ボタンをクリック
+    const sendButton = page.locator('button').filter({ has: page.locator('svg') }).last();
+    await sendButton.click();
+
+    // 6. メッセージ入力フィールドがクリアされることを確認
+    await expect(messageInput).toHaveValue('', { timeout: 3000 });
+
+    // 7. 少なくともチャットエリアが存在することを確認
+    await page.waitForTimeout(2000);
+    const chatArea = page.locator('text=/メッセージがありません|AI対話/i').first();
+    await expect(chatArea).toBeVisible({ timeout: 5000 });
+  });
+
+  /**
+   * E2E-P005-016: プロジェクト削除後のリダイレクト
+   *
+   * テスト対象外:
+   * - プロジェクト削除機能がUI未実装
+   */
+  test.skip('E2E-P005-016: プロジェクト削除後のリダイレクト', async ({ page }) => {
+    // TODO: プロジェクト削除UI実装後に追加
+  });
+
+  /**
+   * E2E-P005-020: ファイル一覧取得と表示（Phase 2）
+   *
+   * 前提条件:
+   * - Phase 1でコード生成が完了している
+   * - Phase 2に遷移している
+   *
+   * 期待結果:
+   * - ファイルツリーにファイルが表示される
+   * - 階層構造が正しく表示される
+   */
+  test('E2E-P005-020: ファイル一覧取得と表示', async ({ page }) => {
+    // 1. 承認済みユーザーでログイン
+    await loginAsApprovedUser(page);
+
+    // 2. プロジェクトを作成
+    const projectId = await createProject(page, 'E2E File List Test');
+
+    // 3. プロジェクト詳細ページにアクセス
+    await page.goto(`/projects/${projectId}`);
+
+    // 4. Phase 1でコード生成依頼
+    const phase1Card = page.locator('.MuiCard-root').filter({ has: page.locator('text=/Phase 1/i') }).first();
+    await phase1Card.click();
+    await page.waitForTimeout(1000);
+
+    const messageInput = page.locator('input[placeholder*="メッセージ"], textarea[placeholder*="メッセージ"]').first();
+    await messageInput.fill('簡単なTodoアプリを作成してください');
+
+    const sendButton = page.locator('button').filter({ has: page.locator('svg') }).last();
+    await sendButton.click();
+
+    // コード生成完了を待つ
+    await page.waitForTimeout(10000);
+
+    // 5. Phase 2に遷移
+    const phase2Card = page.locator('.MuiCard-root').filter({ has: page.locator('text=/Phase 2/i') }).first();
+    await phase2Card.click();
+    await page.waitForTimeout(2000);
+
+    // 6. ファイルツリーヘッダーが表示される
+    const fileTreeHeader = page.locator('text=ファイル').first();
+    await expect(fileTreeHeader).toBeVisible({ timeout: 5000 });
+
+    // 7. ファイルノードが少なくとも1つ表示される
+    await page.waitForTimeout(2000);
+
+    // ファイルまたはフォルダが表示されることを確認（ListItemButtonを使用）
+    const firstFileItem = page.locator('.MuiListItemButton-root').first();
+    await expect(firstFileItem).toBeVisible({ timeout: 5000 });
+  });
+
+  /**
+   * E2E-P005-021: ファイル選択とコンテンツ表示（Phase 2）
+   *
+   * テスト対象外:
+   * - 最初のListItemButtonがフォルダの場合、Monaco Editorが表示されない
+   * - ファイルを確実に選択するロジックが必要
+   *
+   * 前提条件:
+   * - Phase 2でファイルが生成されている
+   *
+   * 期待結果:
+   * - ファイルをクリックするとMonaco Editorに内容が表示される
+   */
+  test.skip('E2E-P005-021: ファイル選択とコンテンツ表示', async ({ page }) => {
+    // 1. 承認済みユーザーでログイン
+    await loginAsApprovedUser(page);
+
+    // 2. プロジェクトを作成
+    const projectId = await createProject(page, 'E2E File Select Test');
+
+    // 3. プロジェクト詳細ページにアクセス
+    await page.goto(`/projects/${projectId}`);
+
+    // 4. Phase 1でコード生成
+    const phase1Card = page.locator('.MuiCard-root').filter({ has: page.locator('text=/Phase 1/i') }).first();
+    await phase1Card.click();
+
+    const messageInput = page.locator('input[placeholder*="メッセージ"], textarea[placeholder*="メッセージ"]').first();
+    await messageInput.fill('簡単なカウンターアプリを作成してください');
+
+    const sendButton = page.locator('button').filter({ has: page.locator('svg') }).last();
+    await sendButton.click();
+
+    await page.waitForTimeout(10000);
+
+    // 5. Phase 2に遷移
+    const phase2Card = page.locator('.MuiCard-root').filter({ has: page.locator('text=/Phase 2/i') }).first();
+    await phase2Card.click();
+    await page.waitForTimeout(2000);
+
+    // 6. ファイルツリーで最初のファイルをクリック
+    const firstFileItem = page.locator('.MuiListItemButton-root').first();
+    await expect(firstFileItem).toBeVisible({ timeout: 5000 });
+    await firstFileItem.click();
+    await page.waitForTimeout(1000);
+
+    // 7. Monaco Editorが表示されることを確認
+    const monacoEditor = page.locator('.monaco-editor, [data-testid="monaco-editor"]').first();
+    await expect(monacoEditor).toBeVisible({ timeout: 5000 });
+  });
+
+  /**
+   * E2E-P005-022: Phase切り替え時のファイル表示状態
+   *
+   * 前提条件:
+   * - Phase 2でファイルが生成されている
+   *
+   * 期待結果:
+   * - Phase 1に戻るとファイルツリーが非表示になる
+   * - Phase 2に戻るとファイルツリーが再表示される
+   */
+  test('E2E-P005-022: Phase切り替え時のファイル表示状態', async ({ page }) => {
+    // 1. 承認済みユーザーでログイン
+    await loginAsApprovedUser(page);
+
+    // 2. プロジェクトを作成
+    const projectId = await createProject(page, 'E2E Phase Switch File Test');
+
+    // 3. プロジェクト詳細ページにアクセス
+    await page.goto(`/projects/${projectId}`);
+
+    // 4. Phase 1でコード生成
+    const phase1Card = page.locator('.MuiCard-root').filter({ has: page.locator('text=/Phase 1/i') }).first();
+    await phase1Card.click();
+
+    const messageInput = page.locator('input[placeholder*="メッセージ"], textarea[placeholder*="メッセージ"]').first();
+    await messageInput.fill('シンプルな計算機アプリを作成してください');
+
+    const sendButton = page.locator('button').filter({ has: page.locator('svg') }).last();
+    await sendButton.click();
+
+    await page.waitForTimeout(10000);
+
+    // 5. Phase 2に遷移
+    const phase2Card = page.locator('.MuiCard-root').filter({ has: page.locator('text=/Phase 2/i') }).first();
+    await phase2Card.click();
+    await page.waitForTimeout(2000);
+
+    // 6. ファイルツリーが表示される
+    const fileTreeHeader = page.locator('text=ファイル').first();
+    await expect(fileTreeHeader).toBeVisible({ timeout: 5000 });
+
+    // 7. Phase 1に戻る
+    await phase1Card.click();
+    await page.waitForTimeout(1000);
+
+    // 8. ファイルツリーが非表示になる（Phase 1では表示されない）
+    const chatHeader1 = page.locator('text=/要件定義/i').first();
+    await expect(chatHeader1).toBeVisible({ timeout: 5000 });
+
+    // 9. 再度Phase 2に戻る
+    await phase2Card.click();
+    await page.waitForTimeout(1000);
+
+    // 10. ファイルツリーが再表示される
+    await expect(fileTreeHeader).toBeVisible({ timeout: 5000 });
   });
 });

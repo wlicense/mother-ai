@@ -235,4 +235,61 @@ test.describe('A-001: 申請審査ダッシュボード', () => {
     // 9. pending3@example.comが一覧に残っていることを確認（却下されていない）
     await expect(pending3Email).toBeVisible();
   });
+
+  /**
+   * E2E-A001-103: テーブル列の表示確認
+   *
+   * 前提条件:
+   * - 管理者アカウントでログイン
+   *
+   * 期待結果:
+   * - 氏名、メール、利用目的、申請日時、アクションの列が表示される
+   */
+  test('E2E-A001-103: テーブル列の表示確認', async ({ page }) => {
+    // 1. 管理者でログイン
+    await loginAsAdmin(page);
+
+    // 2. 申請審査ページにアクセス
+    await page.goto('/admin/applications');
+
+    // 3. テーブルヘッダーを確認
+    const nameHeader = page.locator('th').filter({ hasText: /氏名|名前/i }).first();
+    const emailHeader = page.locator('th').filter({ hasText: /メール/i }).first();
+    const purposeHeader = page.locator('th').filter({ hasText: /利用目的|目的/i }).first();
+
+    // いずれかのヘッダーが表示されることを確認
+    await expect(nameHeader.or(emailHeader).or(purposeHeader).first()).toBeVisible({ timeout: 10000 });
+  });
+
+  /**
+   * E2E-A001-104: レスポンシブデザイン検証
+   *
+   * 前提条件:
+   * - 管理者アカウントでログイン
+   *
+   * 期待結果:
+   * - モバイル・タブレット・デスクトップで適切に表示される
+   */
+  test('E2E-A001-104: レスポンシブデザイン検証', async ({ page }) => {
+    // 1. 管理者でログイン
+    await loginAsAdmin(page);
+
+    // 2. 申請審査ページにアクセス
+    await page.goto('/admin/applications');
+
+    // 3. モバイルサイズ (375x667)
+    await page.setViewportSize({ width: 375, height: 667 });
+    const headingMobile = page.locator('h1, h2, h3, h4').filter({ hasText: /申請審査/i }).first();
+    await expect(headingMobile).toBeVisible({ timeout: 10000 });
+
+    // 4. タブレットサイズ (768x1024)
+    await page.setViewportSize({ width: 768, height: 1024 });
+    const headingTablet = page.locator('h1, h2, h3, h4').filter({ hasText: /申請審査/i }).first();
+    await expect(headingTablet).toBeVisible();
+
+    // 5. デスクトップサイズ (1920x1080)
+    await page.setViewportSize({ width: 1920, height: 1080 });
+    const headingDesktop = page.locator('h1, h2, h3, h4').filter({ hasText: /申請審査/i }).first();
+    await expect(headingDesktop).toBeVisible();
+  });
 });

@@ -75,15 +75,24 @@ export const activateUser = async (userId: string): Promise<{ message: string }>
 export const getAPIStats = async (): Promise<APIMonitorStatsResponse> => {
   const response = await apiClient.get<any>(`${BASE_PATH}/api-stats`);
 
-  // バックエンドのレスポンス形式に合わせて変換
+  // バックエンドのレスポンス形式をそのまま返す（Phase 1-14統計を含む）
   return {
-    total_requests: response.data.total_calls,
-    total_cost: response.data.total_cost,
-    today_requests: response.data.today_calls,
-    today_cost: response.data.today_cost,
-    monthly_requests: response.data.total_calls, // Placeholder
+    total_requests: response.data.total_requests || 0,
+    total_cost: response.data.total_cost || 0,
+    total_tokens: response.data.total_tokens || 0,
+    today_requests: response.data.today_requests || 0,
+    today_cost: response.data.today_cost || 0,
+    monthly_requests: response.data.total_requests, // Placeholder (月次統計は後で実装)
     monthly_cost: response.data.total_cost, // Placeholder
-    top_users: [], // Placeholder
+    top_users: response.data.top_users || [],
+    phase_stats: response.data.phase_stats || [],
+    today_phase_stats: response.data.today_phase_stats || [],
+    cache_stats: response.data.cache_stats || {
+      total_cached_requests: 0,
+      total_cache_hit_rate: 0,
+      today_cached_requests: 0,
+      today_cache_hit_rate: 0,
+    },
   };
 };
 
