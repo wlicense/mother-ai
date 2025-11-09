@@ -20,8 +20,8 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(
     title="マザーAI API",
-    description="AI駆動開発プラットフォーム",
-    version="0.1.0",
+    description="AI駆動開発プラットフォーム - Phase 1-14 全実装",
+    version="0.2.2",
     lifespan=lifespan,
     redirect_slashes=False,  # 末尾スラッシュの自動リダイレクトを無効化
 )
@@ -54,8 +54,9 @@ app.include_router(agents.router, prefix="/api/v1/agents", tags=["エージェ�
 async def root():
     return {
         "message": "マザーAI API",
-        "version": "0.1.0",
+        "version": "0.2.2",
         "status": "running",
+        "phases": "1-14 全実装完了",
     }
 
 

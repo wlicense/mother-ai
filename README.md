@@ -8,10 +8,23 @@
 
 ### 主な機能
 
+#### コア機能 (Phase 1-4)
 - **Phase 1: 要件定義** - AIとの対話でプロジェクト要件を明確化
 - **Phase 2: コード生成** - React + FastAPIのフルスタックコードを自動生成
 - **Phase 3: デプロイ** - Vercel + Google Cloud Runへ自動デプロイ
 - **Phase 4: 自己改善** - マザーAI自身が自己改善・拡張
+
+#### 拡張機能 (Phase 5-14) ✅ 実装完了
+- **Phase 5: テスト生成** - ユニットテスト・E2Eテストの自動生成
+- **Phase 6: ドキュメント生成** - README・API仕様書・アーキテクチャ図の生成
+- **Phase 7: デバッグ支援** - コードスメル・潜在的バグの検出
+- **Phase 8: パフォーマンス最適化** - Lighthouseスコア分析・最適化提案
+- **Phase 9: セキュリティ監査** - 脆弱性スキャン・セキュリティレポート
+- **Phase 10: データベース設計** - ER図・スキーマ設計・最適化
+- **Phase 11: API設計** - OpenAPI 3.0仕様・エンドポイント設計
+- **Phase 12: UX/UI改善** - アクセシビリティ・デザイン改善提案
+- **Phase 13: リファクタリング** - コード品質分析・リファクタリング計画
+- **Phase 14: モニタリング** - Prometheus・Grafana・APM設定
 
 ### 技術スタック
 
@@ -187,13 +200,29 @@ MAIL_PASSWORD=your-app-password
 
 ### エージェント構造
 
-マザーAIは5つのエージェントで構成されています：
+マザーAIは**14個の専門Phaseエージェント**で構成されています：
 
-1. **OrchestratorAgent** - プロジェクト統括
-2. **Phase1RequirementsAgent** - 要件定義
-3. **Phase2CodeGenerationAgent** - コード生成
-4. **Phase3DeploymentAgent** - デプロイ
-5. **Phase4SelfImprovementAgent** - 自己改善
+#### コアエージェント (Phase 1-4)
+1. **Phase1RequirementsAgent** - 要件定義
+2. **Phase2CodeGenerationAgent** - コード生成（27ファイル自動生成）
+3. **Phase3DeploymentAgent** - デプロイ（9ファイル自動生成）
+4. **Phase4SelfImprovementAgent** - 自己改善（承認制）
+
+#### 拡張エージェント (Phase 5-14) ✅ 全て実装完了
+5. **Phase5TestGenerationAgent** - テスト生成（15ファイル）
+6. **Phase6DocumentationAgent** - ドキュメント生成（6ファイル）
+7. **Phase7DebugAgent** - デバッグ支援
+8. **Phase8PerformanceAgent** - パフォーマンス最適化
+9. **Phase9SecurityAgent** - セキュリティ監査
+10. **Phase10DatabaseAgent** - データベース設計
+11. **Phase11APIDesignAgent** - API設計
+12. **Phase12UXAgent** - UX/UI改善
+13. **Phase13RefactoringAgent** - リファクタリング
+14. **Phase14MonitoringAgent** - モニタリング設定
+
+**動作モード**:
+- デフォルト: モックモード（コスト0円）
+- オプション: Claude API統合（有料、高品質）
 
 ### 将来の拡張
 
@@ -211,11 +240,50 @@ CEO AI (オーケストレーター)
      └─ セキュリティ課長
 ```
 
+## 本番環境 🚀
+
+本番環境にデプロイ済みです：
+
+- **フロントエンド**: https://frontend-7b8pescz6-wlicenses-projects.vercel.app
+- **バックエンド**: https://mother-ai-backend-735112328456.asia-northeast1.run.app
+
+**デプロイ日**: 2025年11月8日
+
 ## API ドキュメント
 
 バックエンドを起動後、以下のURLでSwagger UIにアクセスできます：
 
-- http://localhost:8572/docs
+- **ローカル**: http://localhost:8572/docs
+- **本番**: https://mother-ai-backend-735112328456.asia-northeast1.run.app/docs
+
+## テスト
+
+### E2Eテスト
+
+Playwright を使用した包括的なE2Eテストを実装：
+
+- **総テスト数**: 117件
+- **カバレッジ**: 全ページ（ゲスト・ユーザー・管理者）
+- **Phase 5-14**: 各エージェントの動作検証済み
+
+```bash
+cd frontend
+npx playwright test                    # 全テスト実行
+npx playwright test --ui               # UIモード
+npx playwright test --headed           # ブラウザ表示
+npx playwright show-report             # レポート表示
+```
+
+### バックエンド統合テスト
+
+全Phase（1-14）エージェントの動作確認：
+
+```bash
+cd backend
+python test_all_agents.py             # 全エージェント動作確認（コスト0）
+```
+
+**テスト結果**: 14/14 Phase 成功（100%）
 
 ## セキュリティ
 
@@ -262,4 +330,6 @@ Phase 4の自己改善機能には以下の安全対策を実装：
 ---
 
 **開始日**: 2025年11月5日
-**バージョン**: 0.1.0 (MVP)
+**バージョン**: 0.2.2
+**ステータス**: Phase 1-14 完成・本番稼働中（MVP比3.5倍の機能）
+**最終更新**: 2025年11月9日

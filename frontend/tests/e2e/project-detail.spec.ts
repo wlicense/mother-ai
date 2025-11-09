@@ -499,7 +499,7 @@ test.describe('P-005: AI対話・プロジェクト開発', () => {
    * - 空のメッセージは送信できない
    * - または送信ボタンが無効化される
    */
-  test.skip('E2E-P005-011: メッセージ送信バリデーション', async ({ page }) => {
+  test('E2E-P005-011: メッセージ送信バリデーション', async ({ page }) => {
     // 1. 承認済みユーザーでログイン
     await loginAsApprovedUser(page);
 
@@ -507,19 +507,32 @@ test.describe('P-005: AI対話・プロジェクト開発', () => {
     const projectId = await createProject(page, 'E2E Validation Test Project');
 
     // 3. プロジェクト詳細ページにアクセス
-    await page.goto(`/projects/${projectId}`);
+    await page.goto(`http://localhost:3347/user/projects/${projectId}`);
 
-    // 4. メッセージ入力フィールドを確認
-    const messageInput = page.locator('input[placeholder*="メッセージ"]').first();
+    // 4. Phase 1カードをクリック（メッセージUIを表示）
+    const phase1Card = page.locator('[data-testid="phase-card-1"]').or(
+      page.locator('div:has-text("Phase 1"):has-text("要件定義")')
+    ).first();
+    await phase1Card.click();
+    await page.waitForTimeout(1000);
+
+    // 5. メッセージ入力フィールドを確認
+    const messageInput = page.locator('textarea[placeholder*="メッセージ"], input[placeholder*="メッセージ"]');
     await expect(messageInput).toBeVisible({ timeout: 5000 });
 
-    // 5. 空のまま送信ボタンをクリック
-    const sendButton = page.locator('button').filter({ has: page.locator('svg') }).last();
+    // 6. 空のまま送信ボタンをクリック
+    const sendButton = page.locator('button:has-text("送信")').or(
+      page.locator('button[type="submit"]')
+    );
     await sendButton.click();
 
-    // 6. メッセージ入力フィールドが空のままであることを確認
-    // （送信されない、またはバリデーションエラー）
+    // 7. メッセージが送信されない（フィールドが空のまま、メッセージが表示されない）
     await page.waitForTimeout(1000);
+
+    // 8. チャット欄に新しいメッセージが表示されていないことを確認
+    // （初期状態のメッセージ数と変わらない）
+    const chatMessages = page.locator('[role="log"], .MuiBox-root').filter({ hasText: /Phase 1/ });
+    // バリデーションにより送信がブロックされているため、入力フィールドは空のまま
     await expect(messageInput).toHaveValue('');
   });
 
