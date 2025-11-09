@@ -875,20 +875,63 @@ class Phase4SelfImprovementAgent(BaseAgent):
         keywords_performance = ["遅い", "重い", "パフォーマンス", "速度", "performance", "slow"]
         keywords_feature = ["機能", "追加", "新しい", "feature", "add"]
         keywords_bug = ["バグ", "エラー", "不具合", "bug", "error", "fix"]
-        keywords_security = ["セキュリティ", "脆弱性", "security", "vulnerability"]
+        keywords_security = ["セキュリティ", "脆弱性", "security", "vulnerability", "スキャン", "scan"]
+        keywords_rollback = ["ロールバック", "rollback", "戻す", "revert"]
 
         msg_lower = user_message.lower()
 
-        if any(kw in msg_lower for kw in keywords_performance):
+        if any(kw in msg_lower for kw in keywords_security):
+            return "security"
+        elif any(kw in msg_lower for kw in keywords_rollback):
+            return "rollback"
+        elif any(kw in msg_lower for kw in keywords_performance):
             return "performance"
         elif any(kw in msg_lower for kw in keywords_feature):
             return "feature"
         elif any(kw in msg_lower for kw in keywords_bug):
             return "bug_fix"
-        elif any(kw in msg_lower for kw in keywords_security):
-            return "security"
         else:
             return "general"
+
+    def security_scan(self, project_files: Dict[str, str] = None) -> Dict[str, Any]:
+        """
+        プロジェクトのセキュリティスキャンを実行
+
+        Args:
+            project_files: プロジェクトファイルの内容
+
+        Returns:
+            セキュリティスキャン結果
+        """
+        from app.agents.templates.security_templates import generate_security_scan_report
+
+        return generate_security_scan_report(project_files)
+
+    def create_approval_workflow(self) -> Dict[str, Any]:
+        """
+        承認フローのテンプレートを作成
+
+        Returns:
+            承認フロー設定
+        """
+        from app.agents.templates.security_templates import generate_approval_workflow_template
+
+        return generate_approval_workflow_template()
+
+    def create_rollback_plan(self, change_id: str, change_description: str) -> Dict[str, Any]:
+        """
+        ロールバック計画を作成
+
+        Args:
+            change_id: 変更ID
+            change_description: 変更内容の説明
+
+        Returns:
+            ロールバック計画
+        """
+        from app.agents.templates.security_templates import generate_rollback_plan
+
+        return generate_rollback_plan(change_id, change_description)
 
 
 class Phase5TestGenerationAgent(BaseAgent):

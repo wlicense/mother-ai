@@ -187,12 +187,47 @@ test.describe('P-002: 利用申請フォーム', () => {
   });
 
   /**
-   * E2E-P002-006: OAuth連携
+   * E2E-P002-006: 無効なメールアドレスエラー
+   *
+   * 前提条件:
+   * - なし
+   *
+   * 期待結果:
+   * - 無効なメールアドレスでエラーメッセージが表示される
+   */
+  test('E2E-P002-006: 無効なメールアドレスエラー', async ({ page }) => {
+    // 1. /apply にアクセス
+    await page.goto('/apply');
+
+    // 2. 無効なメールアドレスで入力
+    await page.getByLabel('お名前').fill('テストユーザー');
+    await page.getByLabel('メールアドレス').fill('invalid-email-format');
+
+    const passwordFields = page.locator('input[type="password"]');
+    await passwordFields.first().fill('Password123!');
+    await passwordFields.nth(1).fill('Password123!');
+    await page.getByLabel('利用目的').fill('無効なメールアドレスでのテストです。20文字以上入力します。');
+
+    // 3. 申請ボタンをクリック
+    const submitButton = page.getByRole('button', { name: /申請/i });
+    await submitButton.click();
+
+    // 4. HTML5バリデーションまたはエラーメッセージが表示されることを確認
+    // ブラウザのHTML5バリデーションが動作する場合もあるため、
+    // エラー表示の確認またはフォームが送信されないことを確認
+    await page.waitForTimeout(1000);
+
+    // ページが遷移していないことを確認（バリデーションで止まる）
+    await expect(page).toHaveURL(/.*apply/);
+  });
+
+  /**
+   * E2E-P002-007: OAuth連携
    *
    * テスト対象外:
    * - OAuth認証フローは外部サービスに依存
    */
-  test.skip('E2E-P002-006: Google OAuth連携', async ({ page }) => {
+  test.skip('E2E-P002-007: Google OAuth連携', async ({ page }) => {
     // TODO: OAuthモックまたは統合テスト環境が必要
   });
 

@@ -156,17 +156,13 @@ test.describe('P-003: ログインページ', () => {
   /**
    * E2E-P003-103: 審査中ユーザーのログイン試行
    *
-   * テスト対象外:
-   * - /pendingページの「審査中」テキストが見つからない問題を調査中
-   * - リダイレクトは成功するが、ページコンテンツの表示に問題がある可能性
-   *
    * 前提条件:
    * - pending3@example.com (pending状態)
    *
    * 期待結果:
    * - ログイン成功後、/pendingページへリダイレクト
    */
-  test.skip('E2E-P003-103: 審査中ユーザーのログイン試行', async ({ page }) => {
+  test('E2E-P003-103: 審査中ユーザーのログイン試行', async ({ page }) => {
     // 1. /login にアクセス
     await page.goto('/login');
     await expect(page).toHaveURL(/.*login/);

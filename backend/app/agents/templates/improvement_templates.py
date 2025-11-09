@@ -11,7 +11,7 @@ def generate_improvement_proposals(improvement_type: str = "general") -> Dict[st
     改善提案を生成（モックモード）
 
     Args:
-        improvement_type: 改善タイプ（performance, feature, bug_fix, security, general）
+        improvement_type: 改善タイプ（performance, feature, bug_fix, security, general, rollback）
 
     Returns:
         改善提案の辞書
@@ -296,6 +296,61 @@ async def rate_limit_middleware(request, call_next):
                 }
             ],
             "estimated_total_impact": "総合的なシステム品質50%向上"
+        },
+
+        "rollback": {
+            "title": "ロールバック計画",
+            "summary": "問題が発生した際に、安全に前の状態に戻すための計画を作成しました。",
+            "improvements": [
+                {
+                    "id": "ROLL-001",
+                    "category": "Safety",
+                    "title": "自動バックアップ機能の実装",
+                    "description": "重要な変更を行う前に、自動的にデータベースとコードのバックアップを作成します。",
+                    "priority": "critical",
+                    "estimated_value": "データ損失リスクゼロ",
+                    "implementation": {
+                        "steps": [
+                            "1. データベースダンプ作成（pg_dump）",
+                            "2. Gitコミット作成（変更前の状態）",
+                            "3. バックアップメタデータ保存",
+                            "4. 変更実行",
+                        ],
+                        "rollback_command": "python scripts/rollback.py --backup-id <backup_id>"
+                    },
+                    "risks": "なし - 読み取り専用操作",
+                    "test_plan": "バックアップ・リストアテスト"
+                },
+                {
+                    "id": "ROLL-002",
+                    "category": "Monitoring",
+                    "title": "変更履歴の自動記録",
+                    "description": "全ての変更を履歴として記録し、いつでも過去の状態に戻せるようにします。",
+                    "priority": "high",
+                    "estimated_value": "完全な監査証跡",
+                    "implementation": {
+                        "database_table": "change_history",
+                        "fields": ["change_id", "timestamp", "user", "type", "description", "git_commit"],
+                    },
+                    "risks": "低 - ストレージ使用量増加",
+                    "test_plan": "変更履歴取得・ロールバックテスト"
+                },
+                {
+                    "id": "ROLL-003",
+                    "category": "Automation",
+                    "title": "ワンクリックロールバック機能",
+                    "description": "管理画面から1クリックで前の状態に戻せる機能を追加します。",
+                    "priority": "medium",
+                    "estimated_value": "復旧時間90%削減",
+                    "implementation": {
+                        "ui": "管理画面に「ロールバック」ボタン追加",
+                        "api": "POST /api/v1/admin/rollback/{change_id}",
+                    },
+                    "risks": "中 - 誤操作のリスク（確認ダイアログ必須）",
+                    "test_plan": "ロールバック機能E2Eテスト"
+                }
+            ],
+            "estimated_total_impact": "システム復旧時間95%削減、ダウンタイム最小化"
         }
     }
 
